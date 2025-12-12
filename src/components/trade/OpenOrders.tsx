@@ -33,9 +33,9 @@ export default function OpenOrders({ symbol }: OpenOrdersProps) {
   const tabs = ["Açık Emirler (2)", "Emir Geçmişi", "Alım-Satım Geçmişi", "Varlıklar"];
 
   return (
-    <div className="h-64 border-t border-gray-200 dark:border-gray-700 bg-surface-light dark:bg-surface-dark flex flex-col">
+    <div className="h-64 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-black flex flex-col">
       {/* Tabs */}
-      <div className="flex items-center px-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center px-4 border-b border-gray-200 dark:border-gray-800">
         {tabs.map((tab, i) => (
           <button
             key={tab}

@@ -1,10 +1,11 @@
 import { fetchUser, fetchTransactions } from "@/actions/market";
 import { getMarketDataSnapshot } from "@/lib/market";
-import type { PortfolioHolding } from "@/types";
-import { TrendingUp, TrendingDown, ArrowDownToLine, ArrowUpFromLine, Search, Wallet, BarChart3, Bitcoin, Globe, History } from "lucide-react";
+import type { PortfolioHolding, AssetCategory } from "@/types";
+import { TrendingUp, TrendingDown, ArrowDownToLine, ArrowUpFromLine, Search } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import RecentTransactions from "@/components/wallet/RecentTransactions";
+import WalletSidebar from "@/components/wallet/WalletSidebar";
 
 export const dynamic = "force-dynamic";
 
@@ -13,16 +14,15 @@ export const metadata = {
   description: "Manage your portfolio on Midas trading platform",
 };
 
-// Sidebar navigation items
-const sidebarItems = [
-  { icon: Wallet, label: "Varlık Özeti", href: "/wallet", active: true },
-  { icon: BarChart3, label: "Borsa İstanbul", href: "#" },
-  { icon: Globe, label: "ABD Borsaları", href: "#" },
-  { icon: Bitcoin, label: "Kripto Varlıklar", href: "#" },
-  { icon: History, label: "İşlem Geçmişi", href: "#" },
-];
+interface WalletPageProps {
+  searchParams: Promise<{ category?: string }>;
+}
 
-export default async function WalletPage() {
+export default async function WalletPage({ searchParams }: WalletPageProps) {
+  // Await searchParams (Next.js 15 requirement)
+  const params = await searchParams;
+  const categoryFilter = params.category as AssetCategory | undefined;
+
   // Fetch user data and transactions
   const [user, transactions] = await Promise.all([
     fetchUser(),
@@ -33,7 +33,7 @@ export default async function WalletPage() {
   const marketData = getMarketDataSnapshot();
 
   // Build holdings with calculated values
-  const holdings: PortfolioHolding[] = user.portfolio
+  const allHoldings: PortfolioHolding[] = user.portfolio
     .filter((item) => item.quantity > 0.00001)
     .map((item) => {
       const asset = marketData.find((a) => a.symbol === item.symbol);
@@ -58,22 +58,27 @@ export default async function WalletPage() {
     })
     .filter(Boolean) as PortfolioHolding[];
 
-  // Calculate totals
-  const totalHoldingsValue = holdings.reduce((sum, h) => sum + h.currentValue, 0);
+  // Apply category filter
+  const holdings = categoryFilter 
+    ? allHoldings.filter((h) => h.category === categoryFilter)
+    : allHoldings;
+
+  // Calculate totals (always from all holdings for summary)
+  const totalHoldingsValue = allHoldings.reduce((sum, h) => sum + h.currentValue, 0);
   const totalNetWorth = user.balance + totalHoldingsValue;
-  const totalProfitLoss = holdings.reduce((sum, h) => sum + h.profitLoss, 0);
+  const totalProfitLoss = allHoldings.reduce((sum, h) => sum + h.profitLoss, 0);
   const totalProfitLossPercent = totalHoldingsValue > 0 
     ? (totalProfitLoss / (totalHoldingsValue - totalProfitLoss)) * 100 
     : 0;
 
   // Calculate dynamic distribution by category
-  const cryptoValue = holdings
+  const cryptoValue = allHoldings
     .filter((h) => h.category === "crypto")
     .reduce((sum, h) => sum + h.currentValue, 0);
-  const stockValue = holdings
+  const stockValue = allHoldings
     .filter((h) => h.category === "stock")
     .reduce((sum, h) => sum + h.currentValue, 0);
-  const commodityValue = holdings
+  const commodityValue = allHoldings
     .filter((h) => h.category === "commodity")
     .reduce((sum, h) => sum + h.currentValue, 0);
   const cashValue = user.balance;
@@ -89,13 +94,22 @@ export default async function WalletPage() {
     { label: "Nakit", percent: calcPercent(cashValue), color: "bg-blue-400" },
   ].filter((d) => d.percent > 0); // Only show categories with value
 
+  // Get category label for display
+  const getCategoryLabel = () => {
+    switch (categoryFilter) {
+      case "stock": return "Hisseler";
+      case "crypto": return "Kripto Varlıklar";
+      case "commodity": return "Emtia & Döviz";
+      default: return "Tüm Varlıklar";
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Top Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Main Summary Card */}
-        <div className="lg:col-span-2 bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-border-dark">
+        <div className="lg:col-span-2 bg-white dark:bg-black p-6 rounded-2xl border border-gray-200 dark:border-gray-800">
           <div className="flex justify-between items-start mb-4">
             <div>
               <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
@@ -116,7 +130,7 @@ export default async function WalletPage() {
                 </span>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                ≈ ₺{(totalNetWorth * 33).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
+                ≈ ₺{(totalNetWorth * 34).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
               </p>
             </div>
             <div className="flex gap-3">
@@ -154,61 +168,42 @@ export default async function WalletPage() {
         </div>
 
         {/* Midas Plus Card */}
-        <div className="bg-gradient-to-br from-primary to-purple-600 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden group cursor-pointer">
+        <Link href="/analysis" className="bg-gradient-to-br from-primary to-purple-600 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden group cursor-pointer block">
           <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-110 transition-transform" />
           <h3 className="text-lg font-bold mb-2 relative z-10">Midas Plus'a Geç</h3>
           <p className="text-white/80 text-sm mb-4 relative z-10">
             Daha düşük komisyonlar ve canlı veri akışı ile yatırımlarını güçlendir.
           </p>
-          <button className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors relative z-10 border border-white/10">
+          <span className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors relative z-10 border border-white/10 inline-block">
             Planları İncele
-          </button>
-        </div>
+          </span>
+        </Link>
       </div>
 
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Sidebar */}
-        <div className="hidden lg:block lg:col-span-1 space-y-2">
-          {sidebarItems.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl transition-colors",
-                item.active
-                  ? "bg-white dark:bg-surface-dark text-primary font-medium shadow-sm border border-primary/10"
-                  : "text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-surface-dark hover:text-gray-900 dark:hover:text-white"
-              )}
-            >
-              <item.icon className="w-5 h-5" />
-              {item.label}
-            </Link>
-          ))}
-        </div>
+        <WalletSidebar />
 
         {/* Holdings Table */}
         <div className="lg:col-span-3">
-          <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-border-dark overflow-hidden">
+          <div className="bg-white dark:bg-black rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
             {/* Table Header */}
             <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex space-x-1 bg-gray-100 dark:bg-gray-800/50 p-1 rounded-lg w-fit">
-                <button className="px-4 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-700 text-primary shadow-sm">
-                  Tümü
-                </button>
-                <button className="px-4 py-1.5 text-sm font-medium rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
-                  Spot
-                </button>
-                <button className="px-4 py-1.5 text-sm font-medium rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
-                  Funding
-                </button>
+              <div className="flex items-center gap-3">
+                <h3 className="font-semibold text-gray-900 dark:text-white">
+                  {getCategoryLabel()}
+                </h3>
+                <span className="text-xs text-text-muted bg-gray-100 dark:bg-[#2C2C2E] px-2 py-1 rounded-full">
+                  {holdings.length} varlık
+                </span>
               </div>
               <div className="relative">
                 <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
                   placeholder="Varlık ara..."
-                  className="pl-10 pr-4 py-2 border-none ring-1 ring-gray-200 dark:ring-gray-700 bg-gray-50 dark:bg-gray-800 text-sm rounded-lg w-full sm:w-64 focus:ring-2 focus:ring-primary focus:outline-none text-gray-900 dark:text-white placeholder-gray-400"
+                  className="pl-10 pr-4 py-2 border-none ring-1 ring-gray-200 dark:ring-gray-700 bg-gray-50 dark:bg-[#1C1C1E] text-sm rounded-lg w-full sm:w-64 focus:ring-2 focus:ring-primary focus:outline-none text-gray-900 dark:text-white placeholder-gray-400"
                 />
               </div>
             </div>
@@ -227,35 +222,37 @@ export default async function WalletPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                  {/* Cash Balance Row */}
-                  <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white text-xs font-bold">
-                          $
+                  {/* Cash Balance Row - only show when viewing all */}
+                  {!categoryFilter && (
+                    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white text-xs font-bold">
+                            $
+                          </div>
+                          <div>
+                            <div className="font-bold text-gray-900 dark:text-white">USD</div>
+                            <div className="text-xs text-gray-500">US Dollar</div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-bold text-gray-900 dark:text-white">USD</div>
-                          <div className="text-xs text-gray-500">US Dollar</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">$1.00</td>
-                    <td className="px-6 py-4">
-                      <span className="text-gray-400 font-medium">- 0.00%</span>
-                    </td>
-                    <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">
-                      {user.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="px-6 py-4 text-right text-gray-900 dark:text-white font-bold">
-                      ${user.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button className="text-primary hover:text-primary-dark font-medium text-xs">Yatır</button>
-                      <span className="mx-1 text-gray-300">|</span>
-                      <button className="text-primary hover:text-primary-dark font-medium text-xs">Çek</button>
-                    </td>
-                  </tr>
+                      </td>
+                      <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">$1.00</td>
+                      <td className="px-6 py-4">
+                        <span className="text-gray-400 font-medium">- 0.00%</span>
+                      </td>
+                      <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">
+                        {user.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="px-6 py-4 text-right text-gray-900 dark:text-white font-bold">
+                        ${user.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button className="text-primary hover:text-primary-dark font-medium text-xs">Yatır</button>
+                        <span className="mx-1 text-gray-300">|</span>
+                        <button className="text-primary hover:text-primary-dark font-medium text-xs">Çek</button>
+                      </td>
+                    </tr>
+                  )}
 
                   {/* Asset Rows */}
                   {holdings.map((holding) => {
@@ -309,7 +306,10 @@ export default async function WalletPage() {
                   {holdings.length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                        Henüz varlık bulunmuyor. Al-Sat sayfasından işlem yapabilirsiniz.
+                        {categoryFilter 
+                          ? `Bu kategoride varlık bulunmuyor.`
+                          : `Henüz varlık bulunmuyor. Al-Sat sayfasından işlem yapabilirsiniz.`
+                        }
                       </td>
                     </tr>
                   )}
@@ -320,8 +320,16 @@ export default async function WalletPage() {
             {/* Table Footer */}
             <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
               <span className="text-xs text-gray-500 dark:text-gray-400">
-                Toplam {holdings.length + 1} varlık gösteriliyor
+                {categoryFilter 
+                  ? `${holdings.length} ${getCategoryLabel().toLowerCase()} gösteriliyor`
+                  : `Toplam ${holdings.length + 1} varlık gösteriliyor`
+                }
               </span>
+              {categoryFilter && (
+                <Link href="/wallet" className="text-xs text-primary hover:text-primary-dark font-medium">
+                  Tümünü Göster
+                </Link>
+              )}
             </div>
           </div>
 

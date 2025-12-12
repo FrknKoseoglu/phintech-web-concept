@@ -35,6 +35,7 @@ export interface User {
   id: string;
   balance: number;
   portfolio: PortfolioItem[];
+  favorites: string[];
 }
 
 /**

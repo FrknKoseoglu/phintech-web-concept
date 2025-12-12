@@ -1,12 +1,21 @@
+"use client";
+
+import { useState, useTransition } from "react";
 import { Star, Share2 } from "lucide-react";
+import { toast } from "sonner";
 import type { Asset } from "@/types";
 import { cn } from "@/lib/utils";
+import { toggleFavorite } from "@/actions/user";
 
 interface TradeHeaderProps {
   asset: Asset;
+  isFavorite?: boolean;
 }
 
-export default function TradeHeader({ asset }: TradeHeaderProps) {
+export default function TradeHeader({ asset, isFavorite: initialFavorite = false }: TradeHeaderProps) {
+  const [isFavorite, setIsFavorite] = useState(initialFavorite);
+  const [isPending, startTransition] = useTransition();
+  
   const isPositive = asset.changePercent >= 0;
   const priceChange = asset.price * (asset.changePercent / 100);
 
@@ -18,8 +27,35 @@ export default function TradeHeader({ asset }: TradeHeaderProps) {
     low24h: (asset.price * 0.975).toFixed(2),
   };
 
+  const handleToggleFavorite = () => {
+    // Optimistic update
+    setIsFavorite((prev) => !prev);
+
+    startTransition(async () => {
+      const result = await toggleFavorite(asset.symbol);
+      if (!result.success) {
+        // Revert on failure
+        setIsFavorite((prev) => !prev);
+        toast.error("Favorilere eklenemedi");
+      } else {
+        toast.success(result.isFavorite ? "Favorilere eklendi" : "Favorilerden çıkarıldı");
+      }
+    });
+  };
+
+  // Get category label
+  const getCategoryLabel = () => {
+    switch (asset.category) {
+      case "crypto": return "Kripto";
+      case "stock": return "Hisse";
+      case "commodity": return "Emtia";
+      case "currency": return "Döviz";
+      default: return "Varlık";
+    }
+  };
+
   return (
-    <div className="h-16 border-b border-gray-200 dark:border-gray-700 px-6 flex items-center justify-between bg-surface-light dark:bg-surface-dark">
+    <div className="h-16 border-b border-gray-200 dark:border-gray-800 px-6 flex items-center justify-between bg-white dark:bg-black">
       <div className="flex items-center gap-4">
         {/* Asset Info */}
         <div className="flex flex-col">
@@ -27,8 +63,8 @@ export default function TradeHeader({ asset }: TradeHeaderProps) {
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">
               {asset.symbol}/USD
             </h1>
-            <span className="bg-gray-100 dark:bg-gray-700 text-xs px-2 py-0.5 rounded text-gray-500 dark:text-gray-300">
-              {asset.symbol === "BTC" || asset.symbol === "ETH" ? "Kripto" : "Hisse"}
+            <span className="bg-gray-100 dark:bg-gray-800 text-xs px-2 py-0.5 rounded text-gray-500 dark:text-gray-400">
+              {getCategoryLabel()}
             </span>
           </div>
           <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -36,7 +72,7 @@ export default function TradeHeader({ asset }: TradeHeaderProps) {
           </span>
         </div>
 
-        <div className="h-8 w-px bg-gray-200 dark:bg-gray-700 mx-2" />
+        <div className="h-8 w-px bg-gray-200 dark:bg-gray-800 mx-2" />
 
         {/* Price */}
         <div className="flex flex-col">
@@ -87,10 +123,19 @@ export default function TradeHeader({ asset }: TradeHeaderProps) {
 
       {/* Action Buttons */}
       <div className="flex items-center gap-2">
-        <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-500 transition-colors">
-          <Star className="w-5 h-5" />
+        <button 
+          onClick={handleToggleFavorite}
+          disabled={isPending}
+          className={cn(
+            "p-2 rounded-lg transition-colors",
+            isFavorite 
+              ? "text-yellow-500 bg-yellow-500/10 hover:bg-yellow-500/20" 
+              : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+          )}
+        >
+          <Star className={cn("w-5 h-5", isFavorite && "fill-current")} />
         </button>
-        <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-500 transition-colors">
+        <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-500 transition-colors">
           <Share2 className="w-5 h-5" />
         </button>
       </div>

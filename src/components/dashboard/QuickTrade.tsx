@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { toast } from "sonner";
 import { executeTrade } from "@/actions/trade";
 import type { Asset } from "@/types";
 import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface QuickTradeProps {
   selectedAsset?: Asset;
@@ -16,14 +17,24 @@ export default function QuickTrade({
   availableBalance,
 }: QuickTradeProps) {
   const [isPending, startTransition] = useTransition();
-  const [isBuy, setIsBuy] = useState(true);
+  const [mode, setMode] = useState<"BUY" | "SELL">("BUY");
   const [symbol, setSymbol] = useState(selectedAsset?.symbol || "BTC");
   const [quantity, setQuantity] = useState("");
   const [sliderValue, setSliderValue] = useState(0);
 
+  // Sync symbol with selected asset
+  useEffect(() => {
+    if (selectedAsset?.symbol) {
+      setSymbol(selectedAsset.symbol);
+    }
+  }, [selectedAsset?.symbol]);
+
   // Estimate price for display (will be fetched server-side for actual trade)
   const estimatedPrice = selectedAsset?.price || 0;
   const total = estimatedPrice * parseFloat(quantity || "0");
+
+  const isBuy = mode === "BUY";
+  const accentColor = isBuy ? "success" : "danger";
 
   const handleSubmit = () => {
     const qty = parseFloat(quantity);
@@ -38,7 +49,7 @@ export default function QuickTrade({
     }
 
     startTransition(async () => {
-      const result = await executeTrade(symbol.toUpperCase(), qty, isBuy ? "BUY" : "SELL");
+      const result = await executeTrade(symbol.toUpperCase(), qty, mode);
       if (result.success) {
         toast.success(result.message);
         setQuantity(""); // Reset quantity after successful trade
@@ -57,31 +68,34 @@ export default function QuickTrade({
       const newQuantity = (maxQuantity * value) / 100;
       setQuantity(newQuantity.toFixed(4));
     }
+    // TODO: For SELL mode, calculate based on owned quantity
   };
 
   return (
-    <div className="bg-surface-light dark:bg-surface-dark rounded-xl p-5 shadow-sm border border-border-light dark:border-border-dark">
+    <div className="bg-white dark:bg-black rounded-2xl p-5 border border-gray-200 dark:border-gray-800">
       {/* Buy/Sell Toggle */}
-      <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg mb-6">
+      <div className="flex bg-gray-100 dark:bg-gray-900 p-1 rounded-xl mb-6">
         <button
-          onClick={() => setIsBuy(true)}
+          onClick={() => setMode("BUY")}
           disabled={isPending}
-          className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${
+          className={cn(
+            "flex-1 py-2.5 text-sm font-bold rounded-lg transition-all",
             isBuy
-              ? "bg-success text-white shadow-sm"
+              ? "bg-success text-white shadow-md shadow-success/20"
               : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-          }`}
+          )}
         >
           Al
         </button>
         <button
-          onClick={() => setIsBuy(false)}
+          onClick={() => setMode("SELL")}
           disabled={isPending}
-          className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${
+          className={cn(
+            "flex-1 py-2.5 text-sm font-bold rounded-lg transition-all",
             !isBuy
-              ? "bg-danger text-white shadow-sm"
+              ? "bg-danger text-white shadow-md shadow-danger/20"
               : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-          }`}
+          )}
         >
           Sat
         </button>
@@ -113,7 +127,12 @@ export default function QuickTrade({
             onChange={(e) => setSymbol(e.target.value.toUpperCase())}
             placeholder="BTC, ETH, AAPL..."
             disabled={isPending}
-            className="block w-full px-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-primary focus:border-primary text-gray-800 dark:text-gray-200 uppercase disabled:opacity-50"
+            className={cn(
+              "block w-full px-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-900 border rounded-xl text-gray-800 dark:text-gray-200 uppercase disabled:opacity-50 transition-colors",
+              isBuy 
+                ? "border-gray-200 dark:border-gray-800 focus:ring-success focus:border-success" 
+                : "border-gray-200 dark:border-gray-800 focus:ring-danger focus:border-danger"
+            )}
           />
         </div>
 
@@ -129,7 +148,12 @@ export default function QuickTrade({
               onChange={(e) => setQuantity(e.target.value)}
               placeholder="0.00"
               disabled={isPending}
-              className="block w-full pl-3 pr-14 py-2.5 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-primary focus:border-primary text-gray-800 dark:text-gray-200 disabled:opacity-50"
+              className={cn(
+                "block w-full pl-3 pr-14 py-2.5 text-sm bg-gray-50 dark:bg-gray-900 border rounded-xl text-gray-800 dark:text-gray-200 disabled:opacity-50 transition-colors",
+                isBuy 
+                  ? "border-gray-200 dark:border-gray-800 focus:ring-success focus:border-success" 
+                  : "border-gray-200 dark:border-gray-800 focus:ring-danger focus:border-danger"
+              )}
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
               <span className="text-gray-400 text-xs">{symbol || "---"}</span>
@@ -145,8 +169,13 @@ export default function QuickTrade({
             max="100"
             value={sliderValue}
             onChange={(e) => handleSliderChange(parseInt(e.target.value))}
-            disabled={isPending || !isBuy}
-            className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-primary disabled:opacity-50"
+            disabled={isPending}
+            className={cn(
+              "w-full h-1.5 rounded-full appearance-none cursor-pointer disabled:opacity-50",
+              isBuy 
+                ? "bg-gray-200 dark:bg-gray-800 accent-success" 
+                : "bg-gray-200 dark:bg-gray-800 accent-danger"
+            )}
           />
           <div className="flex justify-between text-[10px] text-gray-400 mt-1">
             <span>0%</span>
@@ -158,7 +187,7 @@ export default function QuickTrade({
         </div>
 
         {/* Total */}
-        <div className="flex justify-between items-center py-2 border-t border-gray-100 dark:border-gray-700">
+        <div className="flex justify-between items-center py-3 border-t border-gray-100 dark:border-gray-800">
           <span className="text-sm text-gray-500">Tahmini Toplam</span>
           <span className="text-lg font-bold text-gray-900 dark:text-white">
             ${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -169,11 +198,12 @@ export default function QuickTrade({
         <button
           onClick={handleSubmit}
           disabled={isPending}
-          className={`w-full font-bold py-3 rounded-lg shadow-lg transition-all transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
+          className={cn(
+            "w-full font-bold py-3.5 rounded-xl shadow-lg transition-all transform active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2",
             isBuy
-              ? "bg-success hover:bg-green-600 text-white shadow-green-500/20"
-              : "bg-danger hover:bg-red-600 text-white shadow-red-500/20"
-          }`}
+              ? "bg-success hover:bg-green-600 text-white shadow-success/30"
+              : "bg-danger hover:bg-red-600 text-white shadow-danger/30"
+          )}
         >
           {isPending ? (
             <>

@@ -1,5 +1,4 @@
 import type { Asset } from "@/types";
-import { cn } from "@/lib/utils";
 
 interface OrderBookProps {
   asset?: Asset;
@@ -28,9 +27,9 @@ export default function OrderBook({ asset }: OrderBookProps) {
   const { asks, bids } = generateOrderBook(price);
 
   return (
-    <div className="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark flex-1 flex flex-col overflow-hidden">
-      <div className="p-4 border-b border-border-light dark:border-border-dark">
-        <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-sm">
+    <div className="bg-white dark:bg-black rounded-2xl border border-gray-200 dark:border-gray-800 flex-1 flex flex-col overflow-hidden">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+        <h3 className="font-semibold text-gray-800 dark:text-white text-sm">
           Emir Defteri
         </h3>
       </div>
@@ -48,7 +47,7 @@ export default function OrderBook({ asset }: OrderBookProps) {
           {asks.map((order, i) => (
             <div
               key={`ask-${i}`}
-              className="grid grid-cols-3 text-xs px-2 py-0.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer relative"
+              className="grid grid-cols-3 text-xs px-2 py-0.5 hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer relative"
             >
               <div
                 className="absolute inset-0 bg-red-100 dark:bg-red-900/10"
@@ -68,7 +67,7 @@ export default function OrderBook({ asset }: OrderBookProps) {
         </div>
 
         {/* Current Price */}
-        <div className="text-center py-3 my-1 border-y border-border-light dark:border-border-dark bg-gray-50 dark:bg-gray-800/30">
+        <div className="text-center py-3 my-1 border-y border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
           <span className="text-lg font-bold text-gray-900 dark:text-white">
             {price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </span>
@@ -80,7 +79,7 @@ export default function OrderBook({ asset }: OrderBookProps) {
           {bids.map((order, i) => (
             <div
               key={`bid-${i}`}
-              className="grid grid-cols-3 text-xs px-2 py-0.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer relative"
+              className="grid grid-cols-3 text-xs px-2 py-0.5 hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer relative"
             >
               <div
                 className="absolute inset-0 bg-green-100 dark:bg-green-900/10"

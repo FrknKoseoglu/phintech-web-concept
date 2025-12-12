@@ -1,21 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import type { Asset, User } from "@/types";
+import type { Asset, User, Transaction } from "@/types";
 import AssetSidebar from "@/components/trade/AssetSidebar";
 import TradeHeader from "@/components/trade/TradeHeader";
 import TradeChartArea from "@/components/trade/TradeChartArea";
 import TradeOrderBook from "@/components/trade/TradeOrderBook";
 import TradeForm from "@/components/trade/TradeForm";
-import OpenOrders from "@/components/trade/OpenOrders";
+import TradeTabs from "@/components/trade/TradeTabs";
 
 interface TradePageClientProps {
   assets: Asset[];
   user: User;
+  transactions: Transaction[];
+  initialSymbol?: string;
 }
 
-export default function TradePageClient({ assets, user }: TradePageClientProps) {
-  const [selectedSymbol, setSelectedSymbol] = useState("BTC");
+export default function TradePageClient({ 
+  assets, 
+  user, 
+  transactions,
+  initialSymbol = "BTC" 
+}: TradePageClientProps) {
+  const [selectedSymbol, setSelectedSymbol] = useState(initialSymbol);
 
   const selectedAsset = assets.find((a) => a.symbol === selectedSymbol) || assets[0];
   
@@ -23,8 +30,11 @@ export default function TradePageClient({ assets, user }: TradePageClientProps) 
   const portfolioItem = user.portfolio.find((p) => p.symbol === selectedSymbol);
   const ownedQuantity = portfolioItem?.quantity || 0;
 
+  // Check if symbol is in favorites
+  const isFavorite = user.favorites?.includes(selectedSymbol) || false;
+
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)] w-full max-w-[1920px] mx-auto overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)] w-full max-w-[1920px] mx-auto overflow-hidden bg-white dark:bg-black">
       {/* Left Sidebar - Asset List */}
       <AssetSidebar
         assets={assets}
@@ -33,20 +43,25 @@ export default function TradePageClient({ assets, user }: TradePageClientProps) 
       />
 
       {/* Main Content */}
-      <section className="flex-1 flex flex-col min-w-0 bg-white dark:bg-gray-900">
+      <section className="flex-1 flex flex-col min-w-0 bg-white dark:bg-black">
         {/* Header */}
-        <TradeHeader asset={selectedAsset} />
+        <TradeHeader asset={selectedAsset} isFavorite={isFavorite} />
 
         {/* Chart + Right Panel */}
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           {/* Chart Section */}
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col border-r border-gray-200 dark:border-gray-800">
             <TradeChartArea asset={selectedAsset} />
-            <OpenOrders symbol={selectedSymbol} />
+            <TradeTabs 
+              symbol={selectedSymbol}
+              transactions={transactions}
+              portfolioItem={portfolioItem}
+              currentPrice={selectedAsset.price}
+            />
           </div>
 
           {/* Right Panel - Order Book + Trade Form */}
-          <div className="w-full md:w-80 border-l border-gray-200 dark:border-gray-700 bg-surface-light dark:bg-surface-dark flex flex-col h-full overflow-hidden">
+          <div className="w-full md:w-80 bg-white dark:bg-black flex flex-col h-full overflow-hidden">
             <TradeOrderBook asset={selectedAsset} />
             <TradeForm 
               asset={selectedAsset} 
@@ -59,4 +74,3 @@ export default function TradePageClient({ assets, user }: TradePageClientProps) 
     </div>
   );
 }
-

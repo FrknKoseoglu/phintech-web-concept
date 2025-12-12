@@ -30,9 +30,9 @@ export default function TradeOrderBook({ asset }: TradeOrderBookProps) {
   const maxAmount = 2.5;
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 border-b border-gray-200 dark:border-gray-700">
+    <div className="flex-1 flex flex-col min-h-0 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black">
       {/* Header */}
-      <div className="p-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+      <div className="p-3 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
         <span className="text-sm font-semibold text-gray-900 dark:text-white">Emir Defteri</span>
         <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
           <MoreHorizontal className="w-4 h-4 text-gray-500" />

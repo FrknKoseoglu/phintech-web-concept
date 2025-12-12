@@ -54,10 +54,12 @@ export default function RootLayout({
           <Toaster 
             position="top-right" 
             richColors
+            theme="dark"
             toastOptions={{
               style: {
-                background: 'var(--toast-bg)',
-                border: '1px solid var(--toast-border)',
+                background: '#1C1C1E',
+                border: '1px solid #2C2C2E',
+                color: '#FFFFFF',
               },
             }}
           />

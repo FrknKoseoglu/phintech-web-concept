@@ -12,7 +12,7 @@ export default async function NewsFeed({ limit = 3, showHeader = true }: NewsFee
 
   if (newsItems.length === 0) {
     return (
-      <div className="bg-white dark:bg-surface-dark rounded-2xl p-5 border border-gray-200 dark:border-border-dark">
+      <div className="bg-white dark:bg-black rounded-2xl p-5 border border-gray-200 dark:border-gray-800">
         <h3 className="font-semibold text-black dark:text-white mb-4">
           Midas Gündem
         </h3>
@@ -24,7 +24,7 @@ export default async function NewsFeed({ limit = 3, showHeader = true }: NewsFee
   }
 
   return (
-    <div className="bg-white dark:bg-surface-dark rounded-2xl p-5 border border-gray-200 dark:border-border-dark">
+    <div className="bg-white dark:bg-black rounded-2xl p-5 border border-gray-200 dark:border-gray-800">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-black dark:text-white">
           Midas Gündem
@@ -65,7 +65,7 @@ export default async function NewsFeed({ limit = 3, showHeader = true }: NewsFee
               </div>
             </a>
             {index < newsItems.length - 1 && (
-              <div className="border-b border-gray-100 dark:border-border-dark mt-4" />
+              <div className="border-b border-gray-100 dark:border-gray-800 mt-4" />
             )}
           </div>
         ))}

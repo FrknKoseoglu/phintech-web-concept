@@ -1,4 +1,4 @@
-import { fetchMarketData, fetchUser } from "@/actions/market";
+import { fetchMarketData, fetchUser, fetchTransactions } from "@/actions/market";
 import TradePageClient from "@/components/trade/TradePageClient";
 
 export const dynamic = "force-dynamic";
@@ -8,12 +8,28 @@ export const metadata = {
   description: "Trade assets on Midas trading platform",
 };
 
-export default async function TradePage() {
+interface TradePageProps {
+  searchParams: Promise<{ symbol?: string }>;
+}
+
+export default async function TradePage({ searchParams }: TradePageProps) {
+  // Await searchParams (Next.js 15 requirement)
+  const params = await searchParams;
+  const initialSymbol = params.symbol || "BTC";
+
   // Fetch data via Server Actions
-  const [assets, user] = await Promise.all([
+  const [assets, user, transactions] = await Promise.all([
     fetchMarketData(),
     fetchUser(),
+    fetchTransactions(),
   ]);
 
-  return <TradePageClient assets={assets} user={user} />;
+  return (
+    <TradePageClient 
+      assets={assets} 
+      user={user}
+      transactions={transactions}
+      initialSymbol={initialSymbol}
+    />
+  );
 }

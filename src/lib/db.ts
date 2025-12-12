@@ -16,6 +16,7 @@ const DEFAULT_USER: User = {
   id: "user_001",
   balance: 10000,
   portfolio: [],
+  favorites: ["BTC", "ETH", "AAPL"],
 };
 
 /**

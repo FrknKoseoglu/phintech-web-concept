@@ -1,48 +1,27 @@
+"use client";
+
+import { useState } from "react";
 import {
-  Bitcoin,
-  Cpu,
-  Car,
-  Gem,
-  Plane,
-  DollarSign,
   TrendingUp,
   TrendingDown,
+  ChevronDown,
+  ChevronRight,
+  Star,
 } from "lucide-react";
 import type { Asset } from "@/types";
 import { cn } from "@/lib/utils";
+import AssetIcon from "@/components/ui/AssetIcon";
 
 interface AssetListProps {
   assets: Asset[];
-}
-
-// Map asset symbols to Lucide icons
-function getAssetIcon(symbol: string) {
-  const iconClass = "w-5 h-5";
-  
-  switch (symbol) {
-    case "BTC":
-      return <Bitcoin className={cn(iconClass, "text-yellow-500")} />;
-    case "ETH":
-      return <Gem className={cn(iconClass, "text-purple-500")} />;
-    case "AAPL":
-      return <Cpu className={cn(iconClass, "text-gray-200")} />;
-    case "TSLA":
-      return <Car className={cn(iconClass, "text-red-500")} />;
-    case "XAU":
-      return <DollarSign className={cn(iconClass, "text-yellow-600")} />;
-    case "THY":
-      return <Plane className={cn(iconClass, "text-blue-500")} />;
-    case "TRY":
-      return <DollarSign className={cn(iconClass, "text-red-600")} />;
-    default:
-      return <DollarSign className={cn(iconClass, "text-text-muted")} />;
-  }
+  selectedSymbol?: string;
+  onSelectAsset?: (symbol: string) => void;
 }
 
 // Format price based on value
 function formatPrice(price: number, symbol: string): string {
-  if (symbol === "TRY") {
-    return `$${price.toFixed(4)}`;
+  if (symbol === "USD" || symbol === "TRY") {
+    return `₺${price.toFixed(2)}`;
   }
   if (price >= 1000) {
     return `$${price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -50,10 +29,38 @@ function formatPrice(price: number, symbol: string): string {
   return `$${price.toFixed(2)}`;
 }
 
-export default function AssetList({ assets }: AssetListProps) {
+// Categories for accordion
+const categories = [
+  { id: "favorites", label: "Favoriler", icon: Star },
+  { id: "crypto", label: "Kripto", filter: (a: Asset) => a.category === "crypto" },
+  { id: "stock", label: "Hisseler", filter: (a: Asset) => a.category === "stock" },
+  { id: "commodity", label: "Emtia & Döviz", filter: (a: Asset) => a.category === "commodity" || a.category === "currency" },
+];
+
+export default function AssetList({ assets, selectedSymbol, onSelectAsset }: AssetListProps) {
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    favorites: true,
+    crypto: true,
+    stock: false,
+    commodity: false,
+  });
+
+  const toggleSection = (id: string) => {
+    setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  // Favorites are first 3 assets for demo
+  const favorites = assets.slice(0, 3);
+
+  const getAssetsForCategory = (category: typeof categories[0]) => {
+    if (category.id === "favorites") return favorites;
+    if (category.filter) return assets.filter(category.filter);
+    return [];
+  };
+
   return (
-    <div className="bg-white dark:bg-surface-dark rounded-2xl border border-gray-200 dark:border-border-dark flex-1 overflow-hidden flex flex-col">
-      <div className="p-4 border-b border-gray-200 dark:border-border-dark flex justify-between items-center">
+    <div className="bg-white dark:bg-black rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col h-[420px]">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center flex-shrink-0">
         <h3 className="font-semibold text-gray-800 dark:text-white">
           İzleme Listesi
         </h3>
@@ -62,54 +69,94 @@ export default function AssetList({ assets }: AssetListProps) {
         </button>
       </div>
 
-      <div className="overflow-y-auto flex-1">
-        <table className="w-full text-sm">
-          <tbody className="divide-y divide-gray-100 dark:divide-border-dark">
-            {assets.map((asset) => {
-              const isPositive = asset.changePercent >= 0;
+      <div className="overflow-y-auto flex-1 scrollbar-thin">
+        {categories.map((category) => {
+          const categoryAssets = getAssetsForCategory(category);
+          const isOpen = openSections[category.id];
 
-              return (
-                <tr
-                  key={asset.symbol}
-                  className="hover:bg-gray-50 dark:hover:bg-[#1C1C1E] cursor-pointer group transition-colors"
-                >
-                  <td className="p-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#1C1C1E] flex items-center justify-center">
-                        {getAssetIcon(asset.symbol)}
-                      </div>
-                      <div>
-                        <div className="font-bold text-gray-900 dark:text-white">
-                          {asset.symbol}
+          if (categoryAssets.length === 0) return null;
+
+          return (
+            <div key={category.id} className="border-b border-gray-100 dark:border-gray-800 last:border-b-0">
+              {/* Accordion Header */}
+              <button
+                onClick={() => toggleSection(category.id)}
+                className="w-full flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  {isOpen ? (
+                    <ChevronDown className="w-4 h-4 text-text-muted" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-text-muted" />
+                  )}
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {category.label}
+                  </span>
+                </div>
+                <span className="text-xs text-text-muted bg-gray-100 dark:bg-gray-900 px-2 py-0.5 rounded-full">
+                  {categoryAssets.length}
+                </span>
+              </button>
+
+              {/* Accordion Content */}
+              {isOpen && (
+                <div className="pb-2">
+                  {categoryAssets.map((asset) => {
+                    const isPositive = asset.changePercent >= 0;
+                    const isSelected = asset.symbol === selectedSymbol;
+
+                    return (
+                      <div
+                        key={asset.symbol}
+                        onClick={() => onSelectAsset?.(asset.symbol)}
+                        className={cn(
+                          "flex items-center justify-between px-4 py-2 cursor-pointer transition-colors",
+                          isSelected 
+                            ? "bg-primary/10 border-l-2 border-primary" 
+                            : "hover:bg-gray-50 dark:hover:bg-gray-900 border-l-2 border-transparent"
+                        )}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <AssetIcon symbol={asset.symbol} size={32} />
+                          <div>
+                            <div className={cn(
+                              "font-bold text-sm",
+                              isSelected ? "text-primary" : "text-gray-900 dark:text-white"
+                            )}>
+                              {asset.symbol}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-text-muted">
+                              {asset.name}
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-text-muted">{asset.name}</div>
+                        <div className="text-right">
+                          <div className="font-semibold text-sm text-gray-900 dark:text-white">
+                            {formatPrice(asset.price, asset.symbol)}
+                          </div>
+                          <div
+                            className={cn(
+                              "text-xs font-medium flex items-center justify-end gap-0.5",
+                              isPositive ? "text-success" : "text-danger"
+                            )}
+                          >
+                            {isPositive ? (
+                              <TrendingUp className="w-3 h-3" />
+                            ) : (
+                              <TrendingDown className="w-3 h-3" />
+                            )}
+                            {isPositive ? "+" : ""}
+                            {asset.changePercent.toFixed(2)}%
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="p-4 text-right">
-                    <div className="font-semibold text-gray-900 dark:text-white">
-                      {formatPrice(asset.price, asset.symbol)}
-                    </div>
-                    <div
-                      className={cn(
-                        "text-xs font-medium flex items-center justify-end gap-0.5",
-                        isPositive ? "text-success" : "text-danger"
-                      )}
-                    >
-                      {isPositive ? (
-                        <TrendingUp className="w-3 h-3" />
-                      ) : (
-                        <TrendingDown className="w-3 h-3" />
-                      )}
-                      {isPositive ? "+" : ""}
-                      {asset.changePercent.toFixed(2)}%
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

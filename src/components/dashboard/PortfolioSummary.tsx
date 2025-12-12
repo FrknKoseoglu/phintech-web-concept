@@ -12,7 +12,7 @@ export default function PortfolioSummary({
   const isPositive = changePercent >= 0;
 
   return (
-    <div className="bg-white dark:bg-surface-dark rounded-2xl p-5 border border-gray-200 dark:border-border-dark">
+    <div className="bg-white dark:bg-black rounded-2xl p-5 border border-gray-200 dark:border-gray-800">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-text-muted text-sm font-medium">
           Toplam Varlıklarım
@@ -42,7 +42,7 @@ export default function PortfolioSummary({
           <ArrowDownToLine className="w-4 h-4" />
           Yatır
         </button>
-        <button className="flex items-center justify-center gap-2 bg-gray-100 dark:bg-[#1C1C1E] hover:bg-gray-200 dark:hover:bg-[#2C2C2E] text-gray-800 dark:text-white py-3 rounded-full text-sm font-semibold transition-all">
+        <button className="flex items-center justify-center gap-2 bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-800 dark:text-white py-3 rounded-full text-sm font-semibold transition-all border border-transparent dark:border-gray-800">
           <ArrowUpFromLine className="w-4 h-4" />
           Çek
         </button>

@@ -29,7 +29,7 @@ export default function Navbar() {
   const isDark = theme === "dark";
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-black border-b border-gray-200 dark:border-[#1C1C1E] h-16">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 h-16">
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
         {/* Left: Logo & Navigation */}
         <div className="flex items-center space-x-8">

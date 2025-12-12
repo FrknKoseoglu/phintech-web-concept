@@ -27,7 +27,7 @@ export default {
         // Surface/Card Colors
         surface: {
           light: "#F4F4F5",
-          dark: "#1C1C1E",
+          dark: "#000000",
         },
         // Border Colors
         border: {

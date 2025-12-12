@@ -1,55 +1,103 @@
 "use client";
 
+import { useState, useEffect, useTransition } from "react";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { LineChart, CandlestickChart } from "lucide-react";
 import type { Asset } from "@/types";
+import { getAssetHistory, type ChartDataPoint } from "@/actions/market";
 import { cn } from "@/lib/utils";
-import { useMemo } from "react";
 
 interface TradeChartAreaProps {
   asset: Asset;
 }
 
-const timeRanges = ["15d", "1S", "4S", "1G", "1H"];
-
-// Seeded random number generator for consistent SSR/client values
-function seededRandom(seed: number): () => number {
-  return () => {
-    seed = (seed * 9301 + 49297) % 233280;
-    return seed / 233280;
-  };
-}
+const timeRanges = [
+  { label: "1G", value: "1d" as const },
+  { label: "1H", value: "1wk" as const },
+  { label: "1A", value: "1mo" as const },
+  { label: "3A", value: "3mo" as const },
+];
 
 export default function TradeChartArea({ asset }: TradeChartAreaProps) {
   const isPositive = asset.changePercent >= 0;
+  const [activeRange, setActiveRange] = useState<"1d" | "1wk" | "1mo" | "3mo">("1mo");
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [isPending, startTransition] = useTransition();
+  const [chartType, setChartType] = useState<"line" | "candle">("line");
 
-  // Use asset price as seed for consistent random values between server and client
-  const candles = useMemo(() => {
-    const random = seededRandom(Math.floor(asset.price * 100));
-    return Array.from({ length: 8 }, () => ({
-      height: random() * 50 + 25,
-      bodyStart: random() * 30,
-      bodyHeight: random() * 40 + 20,
-      isGreen: random() > 0.35,
-    }));
-  }, [asset.price]);
+  // Fetch chart data when symbol or range changes
+  useEffect(() => {
+    startTransition(async () => {
+      const data = await getAssetHistory(asset.symbol, activeRange);
+      setChartData(data);
+    });
+  }, [asset.symbol, activeRange]);
+
+  // Format tooltip value
+  const formatTooltipValue = (value: number) => {
+    return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  // Format X axis label
+  const formatXAxis = (dateStr: string) => {
+    const date = new Date(dateStr);
+    if (activeRange === "1d") {
+      return date.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+    }
+    return date.toLocaleDateString("tr-TR", { day: "2-digit", month: "short" });
+  };
+
+  // Custom tooltip
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ value: number; payload: ChartDataPoint }> }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0];
+      const date = new Date(data.payload.date);
+      return (
+        <div className="bg-[#1C1C1E] border border-[#2C2C2E] rounded-lg px-3 py-2 shadow-lg">
+          <p className="text-xs text-text-muted mb-1">
+            {date.toLocaleDateString("tr-TR", { 
+              day: "2-digit", 
+              month: "short",
+              year: activeRange === "3mo" ? "numeric" : undefined 
+            })}
+            {activeRange === "1d" && ` ${date.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}`}
+          </p>
+          <p className="text-sm font-bold text-white">
+            {formatTooltipValue(data.value)}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const chartColor = isPositive ? "#05C46B" : "#FF3B30";
 
   return (
-    <div className="flex-1 flex flex-col relative bg-white dark:bg-gray-900">
+    <div className="flex-1 flex flex-col relative bg-white dark:bg-black">
       {/* Toolbar */}
-      <div className="h-10 border-b border-gray-200 dark:border-gray-700 flex items-center px-4 gap-4 bg-surface-light dark:bg-surface-dark">
+      <div className="h-10 border-b border-gray-200 dark:border-gray-800 flex items-center px-4 gap-4 bg-white dark:bg-black">
         {/* Time Range */}
-        <div className="flex gap-1">
-          {timeRanges.map((range, i) => (
+        <div className="flex gap-1 bg-gray-100 dark:bg-[#1C1C1E] p-0.5 rounded-lg">
+          {timeRanges.map((range) => (
             <button
-              key={range}
+              key={range.value}
+              onClick={() => setActiveRange(range.value)}
               className={cn(
-                "text-xs font-medium px-2 py-1 rounded transition-colors",
-                i === 1
-                  ? "text-primary bg-primary/10"
-                  : "text-gray-500 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800"
+                "text-xs font-medium px-3 py-1 rounded transition-colors",
+                activeRange === range.value
+                  ? "bg-white dark:bg-[#2C2C2E] text-primary shadow-sm"
+                  : "text-gray-500 hover:text-primary"
               )}
             >
-              {range}
+              {range.label}
             </button>
           ))}
         </div>
@@ -57,61 +105,87 @@ export default function TradeChartArea({ asset }: TradeChartAreaProps) {
         <div className="h-4 w-px bg-gray-300 dark:bg-gray-700" />
 
         {/* Chart Type */}
-        <div className="flex gap-2">
-          <button className="text-gray-500 hover:text-primary transition-colors">
+        <div className="flex gap-1">
+          <button 
+            onClick={() => setChartType("line")}
+            className={cn(
+              "p-1.5 rounded transition-colors",
+              chartType === "line" ? "text-primary bg-primary/10" : "text-gray-500 hover:text-primary"
+            )}
+          >
             <LineChart className="w-4 h-4" />
           </button>
-          <button className="text-primary">
+          <button 
+            onClick={() => setChartType("candle")}
+            className={cn(
+              "p-1.5 rounded transition-colors",
+              chartType === "candle" ? "text-primary bg-primary/10" : "text-gray-500 hover:text-primary"
+            )}
+          >
             <CandlestickChart className="w-4 h-4" />
           </button>
         </div>
+
+        {/* Loading indicator */}
+        {isPending && (
+          <div className="ml-auto">
+            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
       </div>
 
-      {/* Chart Area with Grid Background */}
+      {/* Chart Area */}
       <div
         className="flex-1 relative p-4 overflow-hidden"
         style={{
-          backgroundImage: `linear-gradient(to right, rgba(128, 128, 128, 0.1) 1px, transparent 1px),
-                           linear-gradient(to bottom, rgba(128, 128, 128, 0.1) 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(to right, rgba(128, 128, 128, 0.05) 1px, transparent 1px),
+                           linear-gradient(to bottom, rgba(128, 128, 128, 0.05) 1px, transparent 1px)`,
           backgroundSize: "40px 40px",
         }}
       >
-        {/* Candlestick Visualization */}
-        <div className="absolute inset-0 flex items-end justify-around px-10 pb-10 pt-20 gap-2 opacity-80">
-          {candles.map((candle, i) => (
-            <div
-              key={i}
-              className="w-full relative group"
-              style={{ height: `${candle.height}%` }}
-            >
-              {/* Wick */}
-              <div
-                className={cn(
-                  "absolute h-full w-[1px] left-1/2 -translate-x-1/2",
-                  candle.isGreen ? "bg-success" : "bg-danger"
-                )}
+        {chartData.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="tradeChartGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={chartColor} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <XAxis
+                dataKey="date"
+                tickFormatter={formatXAxis}
+                tick={{ fill: "#8E8E93", fontSize: 10 }}
+                axisLine={{ stroke: "#2C2C2E" }}
+                tickLine={false}
+                interval="preserveStartEnd"
+                minTickGap={60}
               />
-              {/* Body */}
-              <div
-                className={cn(
-                  "absolute w-full left-0 right-0 mx-auto",
-                  candle.isGreen ? "bg-success" : "bg-danger"
-                )}
-                style={{
-                  bottom: `${candle.bodyStart}%`,
-                  height: `${candle.bodyHeight}%`,
-                }}
+              <YAxis
+                domain={["dataMin - 100", "dataMax + 100"]}
+                tick={{ fill: "#8E8E93", fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(value: number) => `$${(value / 1000).toFixed(1)}K`}
+                width={55}
               />
-              {/* Hover background */}
-              <div
-                className={cn(
-                  "absolute inset-0 opacity-20",
-                  candle.isGreen ? "bg-success/20" : "bg-danger/20"
-                )}
+              <Tooltip content={<CustomTooltip />} />
+              <Area
+                type="monotone"
+                dataKey="price"
+                stroke={chartColor}
+                strokeWidth={2}
+                fill="url(#tradeChartGradient)"
+                animationDuration={500}
               />
-            </div>
-          ))}
-        </div>
+            </AreaChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex items-center justify-center h-full text-text-muted">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2" />
+            Grafik yükleniyor...
+          </div>
+        )}
 
         {/* Current Price Indicator */}
         <div
@@ -120,12 +194,12 @@ export default function TradeChartArea({ asset }: TradeChartAreaProps) {
             isPositive ? "bg-success" : "bg-danger"
           )}
         >
-          {asset.price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+          ${asset.price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
         </div>
 
         {/* Watermark */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none">
-          <div className="text-[120px] font-bold text-gray-500">MIDAS</div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none">
+          <div className="text-[100px] font-bold text-gray-500">MIDAS</div>
         </div>
       </div>
     </div>

@@ -89,7 +89,7 @@ export default function TradeForm({
   };
 
   return (
-    <div className="p-4 bg-white dark:bg-gray-800/50">
+    <div className="p-4 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800">
       {/* Buy/Sell Toggle */}
       <div className="flex gap-2 mb-4 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
         <button

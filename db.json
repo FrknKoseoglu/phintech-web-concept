@@ -1,7 +1,7 @@
 {
   "user": {
     "id": "user_001",
-    "balance": 10877.93,
+    "balance": 8540.64,
     "portfolio": [
       {
         "symbol": "TSLA",
@@ -10,14 +10,18 @@
       },
       {
         "symbol": "BTC",
-        "quantity": 0.024300000000000002,
-        "avgCost": 65853.80411522633
+        "quantity": 0.0502,
+        "avgCost": 80104.13937204125
       },
       {
         "symbol": "ETH",
         "quantity": 0.3285,
         "avgCost": 2254.63
       }
+    ],
+    "favorites": [
+      "AVAX",
+      "DOGE"
     ]
   },
   "market": [
@@ -72,6 +76,33 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1765576512483",
+      "type": "BUY",
+      "symbol": "BTC",
+      "quantity": 0.0283,
+      "price": 90243.375,
+      "total": 2553.8875125,
+      "date": "2025-12-12T21:55:12.483Z"
+    },
+    {
+      "id": "tx_1765574548912",
+      "type": "SELL",
+      "symbol": "BTC",
+      "quantity": 0.0036,
+      "price": 90249.555,
+      "total": 324.898398,
+      "date": "2025-12-12T21:22:28.912Z"
+    },
+    {
+      "id": "tx_1765574526302",
+      "type": "BUY",
+      "symbol": "BTC",
+      "quantity": 0.0012,
+      "price": 90249.555,
+      "total": 108.29946599999998,
+      "date": "2025-12-12T21:22:06.302Z"
+    },
     {
       "id": "tx_1765573525566",
       "type": "BUY",
