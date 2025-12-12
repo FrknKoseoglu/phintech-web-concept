@@ -1,25 +1,50 @@
-export default function Home() {
+import { fetchMarketData, fetchUser } from "@/actions/market";
+import PortfolioSummary from "@/components/dashboard/PortfolioSummary";
+import AssetList from "@/components/dashboard/AssetList";
+import ChartArea from "@/components/dashboard/ChartArea";
+import MarketStats from "@/components/dashboard/MarketStats";
+import NewsFeed from "@/components/dashboard/NewsFeed";
+import QuickTrade from "@/components/dashboard/QuickTrade";
+import OrderBook from "@/components/dashboard/OrderBook";
+
+export const dynamic = "force-dynamic";
+
+export default async function DashboardPage() {
+  // Fetch data via Server Actions
+  const [marketData, user] = await Promise.all([
+    fetchMarketData(),
+    fetchUser(),
+  ]);
+
+  // Get BTC as the default selected asset
+  const selectedAsset = marketData.find((a) => a.symbol === "BTC") || marketData[0];
+
   return (
-    <div className="p-6 lg:p-8 max-w-[1920px] mx-auto w-full">
-      {/* Placeholder - Dashboard components coming next */}
-      <div className="bg-surface-dark rounded-xl p-8 border border-border-dark">
-        <h1 className="text-2xl font-bold text-white mb-4">
-          Midas Investment Dashboard
-        </h1>
-        <p className="text-gray-400">
-          Dashboard components will be implemented here. Layout is ready with
-          Navbar and Footer.
-        </p>
-        <div className="mt-6 grid grid-cols-3 gap-4">
-          <div className="bg-background-dark p-4 rounded-lg border border-border-dark">
-            <span className="text-success text-sm font-medium">✓ Navbar</span>
+    <div className="p-4 lg:p-6 max-w-[1920px] mx-auto w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column - Portfolio & Watchlist */}
+        <div className="lg:col-span-3 flex flex-col gap-6">
+          <PortfolioSummary balance={user.balance} />
+          <AssetList assets={marketData} />
+        </div>
+
+        {/* Center Column - Chart & Stats */}
+        <div className="lg:col-span-6 flex flex-col gap-6">
+          <ChartArea asset={selectedAsset} />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <MarketStats />
+            <NewsFeed />
           </div>
-          <div className="bg-background-dark p-4 rounded-lg border border-border-dark">
-            <span className="text-success text-sm font-medium">✓ Footer</span>
-          </div>
-          <div className="bg-background-dark p-4 rounded-lg border border-border-dark">
-            <span className="text-success text-sm font-medium">✓ Tailwind Theme</span>
-          </div>
+        </div>
+
+        {/* Right Column - Trade & Order Book */}
+        <div className="lg:col-span-3 flex flex-col gap-6">
+          <QuickTrade
+            selectedAsset={selectedAsset}
+            availableBalance={user.balance}
+          />
+          <OrderBook asset={selectedAsset} />
         </div>
       </div>
     </div>
