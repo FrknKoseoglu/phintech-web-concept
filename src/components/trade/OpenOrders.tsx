@@ -73,14 +73,14 @@ export default function OpenOrders({ symbol }: OpenOrdersProps) {
                 className="group hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
                 <td className="py-3 text-gray-600 dark:text-gray-300">{order.date}</td>
-                <td className="py-3 font-semibold">{order.pair}</td>
+                <td className="py-3 font-semibold text-gray-900 dark:text-white">{order.pair}</td>
                 <td className="py-3 text-gray-600 dark:text-gray-300">{order.type}</td>
                 <td className={`py-3 font-medium ${order.side === "Al" ? "text-success" : "text-danger"}`}>
                   {order.side}
                 </td>
-                <td className="py-3 text-right">{order.price.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
-                <td className="py-3 text-right">{order.amount}</td>
-                <td className="py-3 text-right">{order.filled}</td>
+                <td className="py-3 text-right text-gray-900 dark:text-white">{order.price.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
+                <td className="py-3 text-right text-gray-700 dark:text-gray-200">{order.amount}</td>
+                <td className="py-3 text-right text-gray-700 dark:text-gray-200">{order.filled}</td>
                 <td className="py-3 text-right text-gray-600 dark:text-gray-300">{order.total}</td>
                 <td className="py-3 text-right">
                   <button className="text-danger hover:bg-danger/10 px-2 py-1 rounded text-xs">

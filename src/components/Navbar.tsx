@@ -8,8 +8,11 @@ import {
   HelpCircle,
   ChevronDown,
   Menu,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/ThemeProvider";
 
 const navLinks = [
   { href: "/", label: "Panel" },
@@ -22,9 +25,11 @@ const navLinks = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark shadow-sm h-16">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-surface-dark border-b border-gray-200 dark:border-border-dark shadow-sm h-16">
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
         {/* Left: Logo & Navigation */}
         <div className="flex items-center space-x-8">
@@ -50,7 +55,7 @@ export default function Navbar() {
                     "px-3 py-2 text-sm font-medium rounded-md transition-all",
                     isActive
                       ? "text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800"
-                      : "text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                      : "text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800/50"
                   )}
                 >
                   {link.label}
@@ -67,7 +72,7 @@ export default function Navbar() {
             <input
               type="text"
               placeholder="Sembol, İsim vb. ara..."
-              className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg py-1.5 pl-9 pr-12 text-sm w-64 focus:ring-2 focus:ring-primary focus:border-transparent text-gray-800 dark:text-gray-200 placeholder-gray-400"
+              className="bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg py-1.5 pl-9 pr-12 text-sm w-64 focus:ring-2 focus:ring-primary focus:border-transparent text-gray-800 dark:text-gray-200 placeholder-gray-400"
             />
             <Search className="absolute left-2.5 top-2 text-gray-400 w-4 h-4" />
             <div className="absolute right-2 top-1.5 flex items-center space-x-1 pointer-events-none">
@@ -78,12 +83,21 @@ export default function Navbar() {
           </div>
 
           {/* Help Button */}
-          <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors hidden sm:block">
+          <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors hidden sm:block">
             <HelpCircle className="w-5 h-5" />
           </button>
 
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors"
+            title={isDark ? "Açık mod" : "Koyu mod"}
+          >
+            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
+
           {/* Notifications */}
-          <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors relative">
+          <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors relative">
             <Bell className="w-5 h-5" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full ring-2 ring-white dark:ring-surface-dark" />
           </button>
@@ -100,13 +114,13 @@ export default function Navbar() {
               <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 group-hover:text-primary">
                 Emre Y.
               </span>
-              <span className="text-[10px] text-gray-400">Pro Üye</span>
+              <span className="text-[10px] text-gray-500 dark:text-gray-400">Pro Üye</span>
             </div>
-            <ChevronDown className="w-4 h-4 text-gray-400 hidden sm:block" />
+            <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400 hidden sm:block" />
           </button>
 
           {/* Mobile Menu Button */}
-          <button className="lg:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500">
+          <button className="lg:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-500">
             <Menu className="w-5 h-5" />
           </button>
         </div>

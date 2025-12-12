@@ -85,11 +85,11 @@ export default function AssetSidebar({
                     <div className="w-5 h-5 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-[8px] text-white font-bold">
                       {asset.symbol.charAt(0)}
                     </div>
-                    <span className="font-bold text-sm">
+                    <span className="font-bold text-sm text-gray-900 dark:text-white">
                       {asset.symbol}/USD
                     </span>
                   </div>
-                  <span className="text-sm font-medium">
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
                     ${asset.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
