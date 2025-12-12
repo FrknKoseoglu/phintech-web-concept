@@ -1,8 +1,29 @@
 {
     "user": {
         "id": "user_001",
-        "balance": 10000,
-        "portfolio": []
+        "balance": 5000,
+        "portfolio": [
+            {
+                "symbol": "BTC",
+                "quantity": 0.15,
+                "avgCost": 41000
+            },
+            {
+                "symbol": "AAPL",
+                "quantity": 10,
+                "avgCost": 170
+            },
+            {
+                "symbol": "TSLA",
+                "quantity": 5,
+                "avgCost": 230
+            },
+            {
+                "symbol": "ETH",
+                "quantity": 1.5,
+                "avgCost": 2100
+            }
+        ]
     },
     "market": [
         {
