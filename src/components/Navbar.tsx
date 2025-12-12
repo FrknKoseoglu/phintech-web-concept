@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Search,
   Bell,
@@ -6,9 +9,10 @@ import {
   ChevronDown,
   Menu,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { href: "/", label: "Panel", active: true },
+  { href: "/", label: "Panel" },
   { href: "/markets", label: "Piyasalar" },
   { href: "/trade", label: "Al-Sat" },
   { href: "/wallet", label: "Portföy" },
@@ -17,6 +21,8 @@ const navLinks = [
 ];
 
 export default function Navbar() {
+  const pathname = usePathname();
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark shadow-sm h-16">
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
@@ -34,19 +40,23 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`px-3 py-2 text-sm font-medium rounded-md transition-all ${
-                  link.active
-                    ? "text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800"
-                    : "text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    "px-3 py-2 text-sm font-medium rounded-md transition-all",
+                    isActive
+                      ? "text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800"
+                      : "text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                  )}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
           </div>
         </div>
 
