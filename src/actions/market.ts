@@ -4,9 +4,9 @@
 // Midas Web Interface - Market Server Actions
 // ============================================
 
-import type { Asset, User } from "@/types";
+import type { Asset, User, Transaction } from "@/types";
 import { getMarketData, getAssetBySymbol, resetMarketPrices } from "@/lib/market";
-import { getUser, resetDb } from "@/lib/db";
+import { getUser, resetDb, getTransactions } from "@/lib/db";
 
 /**
  * Server Action: Fetches simulated market data with dynamic prices.
@@ -49,4 +49,11 @@ export async function resetAllData(): Promise<{ success: boolean }> {
     console.error("Failed to reset data:", error);
     return { success: false };
   }
+}
+
+/**
+ * Server Action: Fetches transactions from the database.
+ */
+export async function fetchTransactions(): Promise<Transaction[]> {
+  return getTransactions();
 }

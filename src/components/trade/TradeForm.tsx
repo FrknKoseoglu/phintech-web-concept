@@ -1,52 +1,91 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Plus, Minus, ChevronDown } from "lucide-react";
+import { useState, useMemo, useTransition } from "react";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import type { Asset } from "@/types";
 import { cn } from "@/lib/utils";
+import { executeTrade } from "@/actions/trade";
 
 interface TradeFormProps {
   asset: Asset;
   availableBalance: number;
+  ownedQuantity?: number;
 }
 
-export default function TradeForm({ asset, availableBalance }: TradeFormProps) {
+export default function TradeForm({ 
+  asset, 
+  availableBalance,
+  ownedQuantity = 0,
+}: TradeFormProps) {
   const [isBuy, setIsBuy] = useState(true);
-  const [price, setPrice] = useState(asset.price.toString());
-  const [amount, setAmount] = useState("");
+  const [quantity, setQuantity] = useState("");
   const [sliderValue, setSliderValue] = useState(0);
-  const [orderType, setOrderType] = useState<"limit" | "market">("limit");
+  const [isPending, startTransition] = useTransition();
 
-  // Calculate total
-  const total = useMemo(() => {
-    const p = parseFloat(price) || 0;
-    const a = parseFloat(amount) || 0;
-    return p * a;
-  }, [price, amount]);
+  // Calculate estimated total based on current market price
+  const estimatedTotal = useMemo(() => {
+    const q = parseFloat(quantity) || 0;
+    return q * asset.price;
+  }, [quantity, asset.price]);
+
+  // Calculate max quantity user can buy/sell
+  const maxQuantity = useMemo(() => {
+    if (isBuy) {
+      return Math.floor((availableBalance / asset.price) * 10000) / 10000;
+    }
+    return ownedQuantity;
+  }, [isBuy, availableBalance, asset.price, ownedQuantity]);
 
   // Check if order is valid
   const isValidOrder = useMemo(() => {
-    const p = parseFloat(price) || 0;
-    const a = parseFloat(amount) || 0;
-    if (p <= 0 || a <= 0) return false;
-    if (isBuy && total > availableBalance) return false;
+    const q = parseFloat(quantity) || 0;
+    if (q <= 0) return false;
+    if (isBuy && estimatedTotal > availableBalance) return false;
+    if (!isBuy && q > ownedQuantity) return false;
     return true;
-  }, [price, amount, total, availableBalance, isBuy]);
+  }, [quantity, estimatedTotal, availableBalance, isBuy, ownedQuantity]);
 
   // Handle slider change
   const handleSliderChange = (value: number) => {
     setSliderValue(value);
-    if (isBuy) {
-      const maxBuyAmount = availableBalance / (parseFloat(price) || 1);
-      setAmount(((maxBuyAmount * value) / 100).toFixed(4));
-    }
+    const newQuantity = (maxQuantity * value) / 100;
+    setQuantity(newQuantity.toFixed(4));
   };
 
-  // Increment/decrement price
-  const adjustPrice = (delta: number) => {
-    const currentPrice = parseFloat(price) || 0;
-    const step = currentPrice > 100 ? 0.1 : 0.01;
-    setPrice((currentPrice + delta * step).toFixed(2));
+  // Reset form
+  const resetForm = () => {
+    setQuantity("");
+    setSliderValue(0);
+  };
+
+  // Handle trade submission
+  const handleSubmit = () => {
+    if (!isValidOrder || isPending) return;
+
+    const qty = parseFloat(quantity);
+    const tradeType = isBuy ? "BUY" : "SELL";
+
+    startTransition(async () => {
+      try {
+        const result = await executeTrade(asset.symbol, qty, tradeType);
+        
+        if (result.success) {
+          toast.success("İşlem Başarılı", {
+            description: result.message,
+          });
+          resetForm();
+        } else {
+          toast.error("İşlem Başarısız", {
+            description: result.message,
+          });
+        }
+      } catch (error) {
+        toast.error("Bir hata oluştu", {
+          description: "Lütfen tekrar deneyin.",
+        });
+      }
+    });
   };
 
   return (
@@ -54,72 +93,42 @@ export default function TradeForm({ asset, availableBalance }: TradeFormProps) {
       {/* Buy/Sell Toggle */}
       <div className="flex gap-2 mb-4 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
         <button
-          onClick={() => setIsBuy(true)}
+          onClick={() => { setIsBuy(true); resetForm(); }}
+          disabled={isPending}
           className={cn(
-            "flex-1 py-1.5 text-sm font-semibold rounded transition-all",
+            "flex-1 py-2 text-sm font-bold rounded-md transition-all",
             isBuy
               ? "bg-success text-white shadow-sm"
               : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700"
           )}
         >
-          Al
+          Piyasa Al
         </button>
         <button
-          onClick={() => setIsBuy(false)}
+          onClick={() => { setIsBuy(false); resetForm(); }}
+          disabled={isPending}
           className={cn(
-            "flex-1 py-1.5 text-sm font-semibold rounded transition-all",
+            "flex-1 py-2 text-sm font-bold rounded-md transition-all",
             !isBuy
               ? "bg-danger text-white shadow-sm"
               : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700"
           )}
         >
-          Sat
+          Piyasa Sat
         </button>
       </div>
 
-      {/* Order Type & Commission */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="relative group">
-          <button className="text-sm font-medium text-gray-700 dark:text-gray-200 flex items-center gap-1 hover:text-primary">
-            {orderType === "limit" ? "Limit" : "Piyasa"}
-            <ChevronDown className="w-4 h-4" />
-          </button>
-        </div>
-        <span className="text-xs text-gray-400 cursor-pointer hover:underline">
-          Komisyon Bilgisi
-        </span>
-      </div>
-
-      {/* Price Input */}
-      <div className="mb-3">
-        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-          Fiyat (USD)
-        </label>
-        <div className="relative">
-          <input
-            type="text"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg py-2 pl-3 pr-16 text-sm font-medium focus:ring-1 focus:ring-primary focus:border-primary text-gray-900 dark:text-white transition-all"
-          />
-          <div className="absolute right-0 top-0 h-full flex flex-col border-l border-gray-200 dark:border-gray-700">
-            <button
-              onClick={() => adjustPrice(1)}
-              className="flex-1 px-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-tr-lg text-gray-500"
-            >
-              <Plus className="w-3 h-3" />
-            </button>
-            <button
-              onClick={() => adjustPrice(-1)}
-              className="flex-1 px-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-br-lg text-gray-500"
-            >
-              <Minus className="w-3 h-3" />
-            </button>
-          </div>
+      {/* Current Market Price (Read-Only) */}
+      <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="flex justify-between items-center">
+          <span className="text-xs text-gray-500 dark:text-gray-400">Piyasa Fiyatı</span>
+          <span className="text-sm font-bold text-gray-900 dark:text-white">
+            ${asset.price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+          </span>
         </div>
       </div>
 
-      {/* Amount Input */}
+      {/* Quantity Input */}
       <div className="mb-4">
         <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
           Miktar ({asset.symbol})
@@ -127,22 +136,38 @@ export default function TradeForm({ asset, availableBalance }: TradeFormProps) {
         <div className="relative">
           <input
             type="text"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            value={quantity}
+            onChange={(e) => {
+              setQuantity(e.target.value);
+              const val = parseFloat(e.target.value) || 0;
+              setSliderValue(maxQuantity > 0 ? Math.min((val / maxQuantity) * 100, 100) : 0);
+            }}
             placeholder="0.00"
-            className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg py-2 pl-3 pr-12 text-sm font-medium focus:ring-1 focus:ring-primary focus:border-primary text-gray-900 dark:text-white transition-all"
+            disabled={isPending}
+            className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg py-2.5 pl-3 pr-12 text-sm font-medium focus:ring-2 focus:ring-primary focus:border-primary text-gray-900 dark:text-white transition-all disabled:opacity-50"
           />
-          <span className="absolute right-3 top-2 text-xs text-gray-500 mt-0.5">
+          <span className="absolute right-3 top-2.5 text-xs text-gray-500">
             {asset.symbol}
           </span>
+        </div>
+        <div className="flex justify-between mt-1 text-xs text-gray-400">
+          <span>
+            Maks: <button 
+              onClick={() => { setQuantity(maxQuantity.toFixed(4)); setSliderValue(100); }}
+              className="text-primary hover:underline"
+            >
+              {maxQuantity.toFixed(4)} {asset.symbol}
+            </button>
+          </span>
+          {!isBuy && <span>Sahip: {ownedQuantity.toFixed(4)}</span>}
         </div>
       </div>
 
       {/* Slider */}
       <div className="mb-6 px-1">
-        <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full relative cursor-pointer">
+        <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full relative cursor-pointer">
           <div
-            className={cn("absolute left-0 top-0 h-full rounded-full", isBuy ? "bg-success" : "bg-danger")}
+            className={cn("absolute left-0 top-0 h-full rounded-full transition-all", isBuy ? "bg-success" : "bg-danger")}
             style={{ width: `${sliderValue}%` }}
           />
           <input
@@ -151,61 +176,88 @@ export default function TradeForm({ asset, availableBalance }: TradeFormProps) {
             max="100"
             value={sliderValue}
             onChange={(e) => handleSliderChange(parseInt(e.target.value))}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            disabled={isPending}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
           />
           <div
             className={cn(
-              "absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full shadow-md border-2 border-white dark:border-gray-800 hover:scale-110 transition-transform",
+              "absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full shadow-md border-2 border-white dark:border-gray-800 hover:scale-110 transition-transform",
               isBuy ? "bg-success" : "bg-danger"
             )}
-            style={{ left: `${sliderValue}%`, marginLeft: "-6px" }}
+            style={{ left: `${sliderValue}%`, marginLeft: "-8px" }}
           />
-          {/* Tick marks */}
-          {[0, 25, 50, 75, 100].map((tick) => (
-            <div
-              key={tick}
-              className="absolute top-2 w-0.5 h-1 bg-gray-300 dark:bg-gray-600"
-              style={{ left: `${tick}%` }}
-            />
+        </div>
+        <div className="flex justify-between text-[10px] text-gray-400 mt-2">
+          {[0, 25, 50, 75, 100].map((pct) => (
+            <button
+              key={pct}
+              onClick={() => handleSliderChange(pct)}
+              className="hover:text-primary transition-colors"
+            >
+              {pct}%
+            </button>
           ))}
         </div>
       </div>
 
-      {/* Available Balance */}
-      <div className="flex justify-between text-xs mb-4 text-gray-500">
-        <span>Kullanılabilir</span>
+      {/* Available Balance / Owned */}
+      <div className="flex justify-between text-xs mb-3 text-gray-500">
+        <span>{isBuy ? "Kullanılabilir Bakiye" : "Sahip Olduğunuz"}</span>
         <span className="font-medium text-gray-800 dark:text-gray-200">
-          {availableBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })} USD
+          {isBuy 
+            ? `$${availableBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+            : `${ownedQuantity.toFixed(4)} ${asset.symbol}`
+          }
         </span>
       </div>
 
-      {/* Total */}
-      <div className="flex justify-between text-sm mb-4 py-2 border-t border-gray-100 dark:border-gray-700">
-        <span className="text-gray-500">Toplam</span>
-        <span className="font-bold text-gray-900 dark:text-white">
-          ${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      {/* Estimated Total */}
+      <div className="flex justify-between text-sm mb-4 py-3 border-y border-gray-100 dark:border-gray-700">
+        <span className="text-gray-500">Tahmini Toplam</span>
+        <span className="font-bold text-lg text-gray-900 dark:text-white">
+          ${estimatedTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </span>
       </div>
 
-      {/* Insufficient Balance Warning */}
-      {isBuy && total > availableBalance && total > 0 && (
+      {/* Validation Warnings */}
+      {isBuy && estimatedTotal > availableBalance && estimatedTotal > 0 && (
         <div className="mb-3 text-xs text-danger bg-danger/10 px-3 py-2 rounded-lg">
-          Yetersiz bakiye. Maksimum: ${availableBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+          Yetersiz bakiye. Maksimum alım: {maxQuantity.toFixed(4)} {asset.symbol}
+        </div>
+      )}
+      {!isBuy && parseFloat(quantity) > ownedQuantity && parseFloat(quantity) > 0 && (
+        <div className="mb-3 text-xs text-danger bg-danger/10 px-3 py-2 rounded-lg">
+          Yetersiz varlık. Sahip olduğunuz: {ownedQuantity.toFixed(4)} {asset.symbol}
         </div>
       )}
 
       {/* Submit Button */}
       <button
-        disabled={!isValidOrder}
+        onClick={handleSubmit}
+        disabled={!isValidOrder || isPending}
         className={cn(
-          "w-full font-bold py-3 rounded-lg shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed",
+          "w-full font-bold py-3.5 rounded-lg shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-base",
           isBuy
             ? "bg-success hover:bg-green-600 text-white shadow-green-500/20"
             : "bg-danger hover:bg-red-600 text-white shadow-red-500/20"
         )}
       >
-        {asset.symbol} {isBuy ? "Al" : "Sat"}
+        {isPending ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            İşleniyor...
+          </>
+        ) : (
+          <>
+            {asset.symbol} {isBuy ? "Satın Al" : "Sat"}
+          </>
+        )}
       </button>
+
+      {/* Info Text */}
+      <p className="text-[10px] text-gray-400 text-center mt-3">
+        Piyasa emri, anlık piyasa fiyatından gerçekleştirilir.
+      </p>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -49,6 +50,16 @@ export default function RootLayout({
           <Navbar />
           <main className="flex-1 pt-16">{children}</main>
           <Footer />
+          <Toaster 
+            position="top-right" 
+            richColors
+            toastOptions={{
+              style: {
+                background: 'var(--toast-bg)',
+                border: '1px solid var(--toast-border)',
+              },
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>

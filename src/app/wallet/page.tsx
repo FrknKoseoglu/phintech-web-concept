@@ -1,9 +1,9 @@
-import { fetchMarketData, fetchUser } from "@/actions/market";
-import type { Asset, PortfolioItem } from "@/types";
-import WalletSummary from "@/components/wallet/WalletSummary";
-import WalletSidebar from "@/components/wallet/WalletSidebar";
-import HoldingsTable from "@/components/wallet/HoldingsTable";
-import UpgradeCard from "@/components/wallet/UpgradeCard";
+import { fetchUser, fetchTransactions } from "@/actions/market";
+import { getMarketDataSnapshot } from "@/lib/market";
+import type { PortfolioHolding } from "@/types";
+import { TrendingUp, TrendingDown, ArrowDownToLine, ArrowUpFromLine, Search, Wallet, BarChart3, Bitcoin, Globe, History } from "lucide-react";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 import RecentTransactions from "@/components/wallet/RecentTransactions";
 
 export const dynamic = "force-dynamic";
@@ -13,15 +13,30 @@ export const metadata = {
   description: "Manage your portfolio on Midas trading platform",
 };
 
-// Calculate holding details with current prices
-function calculateHoldings(
-  portfolio: PortfolioItem[],
-  assets: Asset[]
-) {
-  return portfolio
-    .filter((item) => item.quantity > 0)
+// Sidebar navigation items
+const sidebarItems = [
+  { icon: Wallet, label: "Varlık Özeti", href: "/wallet", active: true },
+  { icon: BarChart3, label: "Borsa İstanbul", href: "#" },
+  { icon: Globe, label: "ABD Borsaları", href: "#" },
+  { icon: Bitcoin, label: "Kripto Varlıklar", href: "#" },
+  { icon: History, label: "İşlem Geçmişi", href: "#" },
+];
+
+export default async function WalletPage() {
+  // Fetch user data and transactions
+  const [user, transactions] = await Promise.all([
+    fetchUser(),
+    fetchTransactions(),
+  ]);
+  
+  // Get market data snapshot (no price mutation)
+  const marketData = getMarketDataSnapshot();
+
+  // Build holdings with calculated values
+  const holdings: PortfolioHolding[] = user.portfolio
+    .filter((item) => item.quantity > 0.00001)
     .map((item) => {
-      const asset = assets.find((a) => a.symbol === item.symbol);
+      const asset = marketData.find((a) => a.symbol === item.symbol);
       if (!asset) return null;
 
       const currentValue = item.quantity * asset.price;
@@ -30,101 +45,288 @@ function calculateHoldings(
       const profitLossPercent = costBasis > 0 ? (profitLoss / costBasis) * 100 : 0;
 
       return {
-        ...item,
-        asset,
+        symbol: item.symbol,
+        name: asset.name,
+        quantity: item.quantity,
+        avgCost: item.avgCost,
+        currentPrice: asset.price,
         currentValue,
         profitLoss,
         profitLossPercent,
+        category: asset.category,
       };
     })
-    .filter(Boolean) as Array<{
-      symbol: string;
-      quantity: number;
-      avgCost: number;
-      asset: Asset;
-      currentValue: number;
-      profitLoss: number;
-      profitLossPercent: number;
-    }>;
-}
+    .filter(Boolean) as PortfolioHolding[];
 
-// Calculate asset allocation for the summary chart
-function calculateAllocations(
-  holdings: Array<{ symbol: string; currentValue: number }>,
-  cashBalance: number
-) {
-  const totalValue = holdings.reduce((sum, h) => sum + h.currentValue, 0) + cashBalance;
-  if (totalValue === 0) return [];
+  // Calculate totals
+  const totalHoldingsValue = holdings.reduce((sum, h) => sum + h.currentValue, 0);
+  const totalNetWorth = user.balance + totalHoldingsValue;
+  const totalProfitLoss = holdings.reduce((sum, h) => sum + h.profitLoss, 0);
+  const totalProfitLossPercent = totalHoldingsValue > 0 
+    ? (totalProfitLoss / (totalHoldingsValue - totalProfitLoss)) * 100 
+    : 0;
 
-  const colors: Record<string, string> = {
-    USD: "#22c55e", // green
-    BTC: "#f97316", // orange
-    ETH: "#8b5cf6", // purple
-    AAPL: "#000000", // black
-    TSLA: "#ef4444", // red
-    XAU: "#eab308", // yellow
-    THY: "#3b82f6", // blue
-    TRY: "#dc2626", // red
-  };
+  // Calculate dynamic distribution by category
+  const cryptoValue = holdings
+    .filter((h) => h.category === "crypto")
+    .reduce((sum, h) => sum + h.currentValue, 0);
+  const stockValue = holdings
+    .filter((h) => h.category === "stock")
+    .reduce((sum, h) => sum + h.currentValue, 0);
+  const commodityValue = holdings
+    .filter((h) => h.category === "commodity")
+    .reduce((sum, h) => sum + h.currentValue, 0);
+  const cashValue = user.balance;
 
-  const allocations = [];
+  // Calculate percentages (avoid division by zero)
+  const calcPercent = (value: number) => 
+    totalNetWorth > 0 ? Math.round((value / totalNetWorth) * 100) : 0;
 
-  // Cash allocation
-  if (cashBalance > 0) {
-    allocations.push({
-      label: "Nakit (USD)",
-      percentage: Math.round((cashBalance / totalValue) * 100),
-      color: colors.USD,
-    });
-  }
+  const distributions = [
+    { label: "Hisse", percent: calcPercent(stockValue), color: "bg-primary" },
+    { label: "Kripto", percent: calcPercent(cryptoValue), color: "bg-purple-400" },
+    { label: "Emtia", percent: calcPercent(commodityValue), color: "bg-orange-400" },
+    { label: "Nakit", percent: calcPercent(cashValue), color: "bg-blue-400" },
+  ].filter((d) => d.percent > 0); // Only show categories with value
 
-  // Asset allocations
-  for (const holding of holdings) {
-    allocations.push({
-      label: holding.symbol,
-      percentage: Math.round((holding.currentValue / totalValue) * 100),
-      color: colors[holding.symbol] || "#6b7280",
-    });
-  }
-
-  return allocations;
-}
-
-export default async function WalletPage() {
-  const [assets, user] = await Promise.all([
-    fetchMarketData(),
-    fetchUser(),
-  ]);
-
-  // Calculate holdings with current prices
-  const holdings = calculateHoldings(user.portfolio, assets);
-
-  // Calculate total portfolio value
-  const holdingsValue = holdings.reduce((sum, h) => sum + h.currentValue, 0);
-  const totalValue = user.balance + holdingsValue;
-
-  // Calculate allocations
-  const allocations = calculateAllocations(holdings, user.balance);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Top Cards */}
+      {/* Top Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <WalletSummary
-          totalValue={totalValue}
-          changePercent={2.4}
-          allocations={allocations}
-        />
-        <UpgradeCard />
+        {/* Main Summary Card */}
+        <div className="lg:col-span-2 bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-border-dark">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                Toplam Varlık Değeri
+              </h2>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+                  ${totalNetWorth.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                </span>
+                <span className={cn(
+                  "text-xs px-2 py-1 rounded-full font-medium flex items-center",
+                  totalProfitLoss >= 0 
+                    ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
+                    : "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+                )}>
+                  {totalProfitLoss >= 0 ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
+                  {totalProfitLoss >= 0 ? "+" : ""}{totalProfitLossPercent.toFixed(1)}%
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                ≈ ₺{(totalNetWorth * 33).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-md shadow-primary/20">
+                <ArrowDownToLine className="w-4 h-4" />
+                Para Yatır
+              </button>
+              <button className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">
+                <ArrowUpFromLine className="w-4 h-4" />
+                Çek
+              </button>
+            </div>
+          </div>
+
+          {/* Distribution Bar */}
+          <div className="mt-6">
+            <div className="flex justify-between text-xs mb-2 text-gray-500 dark:text-gray-400">
+              <span>Varlık Dağılımı</span>
+              <span className="cursor-pointer hover:text-primary">Detayları Gör</span>
+            </div>
+            <div className="w-full h-3 bg-gray-100 dark:bg-gray-800 rounded-full flex overflow-hidden">
+              {distributions.map((d, i) => (
+                <div key={i} className={cn("h-full", d.color)} style={{ width: `${d.percent}%` }} />
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-4 mt-3">
+              {distributions.map((d, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className={cn("w-2 h-2 rounded-full", d.color)} />
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{d.label} %{d.percent}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Midas Plus Card */}
+        <div className="bg-gradient-to-br from-primary to-purple-600 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden group cursor-pointer">
+          <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-110 transition-transform" />
+          <h3 className="text-lg font-bold mb-2 relative z-10">Midas Plus'a Geç</h3>
+          <p className="text-white/80 text-sm mb-4 relative z-10">
+            Daha düşük komisyonlar ve canlı veri akışı ile yatırımlarını güçlendir.
+          </p>
+          <button className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors relative z-10 border border-white/10">
+            Planları İncele
+          </button>
+        </div>
       </div>
 
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <WalletSidebar />
-        
+        {/* Sidebar */}
+        <div className="hidden lg:block lg:col-span-1 space-y-2">
+          {sidebarItems.map((item) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-3 px-4 py-3 rounded-xl transition-colors",
+                item.active
+                  ? "bg-white dark:bg-surface-dark text-primary font-medium shadow-sm border border-primary/10"
+                  : "text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-surface-dark hover:text-gray-900 dark:hover:text-white"
+              )}
+            >
+              <item.icon className="w-5 h-5" />
+              {item.label}
+            </Link>
+          ))}
+        </div>
+
+        {/* Holdings Table */}
         <div className="lg:col-span-3">
-          <HoldingsTable holdings={holdings} cashBalance={user.balance} />
-          <RecentTransactions />
+          <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-border-dark overflow-hidden">
+            {/* Table Header */}
+            <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex space-x-1 bg-gray-100 dark:bg-gray-800/50 p-1 rounded-lg w-fit">
+                <button className="px-4 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-700 text-primary shadow-sm">
+                  Tümü
+                </button>
+                <button className="px-4 py-1.5 text-sm font-medium rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                  Spot
+                </button>
+                <button className="px-4 py-1.5 text-sm font-medium rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                  Funding
+                </button>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Varlık ara..."
+                  className="pl-10 pr-4 py-2 border-none ring-1 ring-gray-200 dark:ring-gray-700 bg-gray-50 dark:bg-gray-800 text-sm rounded-lg w-full sm:w-64 focus:ring-2 focus:ring-primary focus:outline-none text-gray-900 dark:text-white placeholder-gray-400"
+                />
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 font-medium uppercase text-xs">
+                  <tr>
+                    <th className="px-6 py-4">Varlık</th>
+                    <th className="px-6 py-4">Fiyat</th>
+                    <th className="px-6 py-4">Değişim</th>
+                    <th className="px-6 py-4">Bakiye</th>
+                    <th className="px-6 py-4 text-right">Değer (USD)</th>
+                    <th className="px-6 py-4 text-right">İşlem</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                  {/* Cash Balance Row */}
+                  <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white text-xs font-bold">
+                          $
+                        </div>
+                        <div>
+                          <div className="font-bold text-gray-900 dark:text-white">USD</div>
+                          <div className="text-xs text-gray-500">US Dollar</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">$1.00</td>
+                    <td className="px-6 py-4">
+                      <span className="text-gray-400 font-medium">- 0.00%</span>
+                    </td>
+                    <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">
+                      {user.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-6 py-4 text-right text-gray-900 dark:text-white font-bold">
+                      ${user.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button className="text-primary hover:text-primary-dark font-medium text-xs">Yatır</button>
+                      <span className="mx-1 text-gray-300">|</span>
+                      <button className="text-primary hover:text-primary-dark font-medium text-xs">Çek</button>
+                    </td>
+                  </tr>
+
+                  {/* Asset Rows */}
+                  {holdings.map((holding) => {
+                    const isPositive = holding.profitLossPercent >= 0;
+
+                    return (
+                      <tr key={holding.symbol} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                              {holding.symbol.charAt(0)}
+                            </div>
+                            <div>
+                              <div className="font-bold text-gray-900 dark:text-white">{holding.symbol}</div>
+                              <div className="text-xs text-gray-500">{holding.name}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">
+                          ${holding.currentPrice.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={cn(
+                            "flex items-center gap-1 font-medium",
+                            isPositive ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"
+                          )}>
+                            {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                            {isPositive ? "+" : ""}{holding.profitLossPercent.toFixed(2)}%
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">
+                          {holding.quantity.toFixed(4)}
+                        </td>
+                        <td className="px-6 py-4 text-right text-gray-900 dark:text-white font-bold">
+                          ${holding.currentValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <Link href={`/trade?symbol=${holding.symbol}`} className="text-primary hover:text-primary-dark font-medium text-xs">
+                            Al
+                          </Link>
+                          <span className="mx-1 text-gray-300">|</span>
+                          <Link href={`/trade?symbol=${holding.symbol}`} className="text-primary hover:text-primary-dark font-medium text-xs">
+                            Sat
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+
+                  {/* Empty State */}
+                  {holdings.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                        Henüz varlık bulunmuyor. Al-Sat sayfasından işlem yapabilirsiniz.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Table Footer */}
+            <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                Toplam {holdings.length + 1} varlık gösteriliyor
+              </span>
+            </div>
+          </div>
+
+          {/* Recent Transactions */}
+          <RecentTransactions transactions={transactions} />
         </div>
       </div>
     </div>

@@ -24,6 +24,7 @@ const DEFAULT_USER: User = {
 const DEFAULT_DB: DbSchema = {
   user: DEFAULT_USER,
   market: SEED_ASSETS,
+  transactions: [],
 };
 
 /**
@@ -73,4 +74,12 @@ export async function updateUser(user: User): Promise<void> {
  */
 export async function resetDb(): Promise<void> {
   await writeDb(DEFAULT_DB);
+}
+
+/**
+ * Gets transactions from the database.
+ */
+export async function getTransactions(): Promise<import("@/types").Transaction[]> {
+  const db = await readDb();
+  return db.transactions || [];
 }

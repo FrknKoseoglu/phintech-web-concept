@@ -18,6 +18,10 @@ export default function TradePageClient({ assets, user }: TradePageClientProps) 
   const [selectedSymbol, setSelectedSymbol] = useState("BTC");
 
   const selectedAsset = assets.find((a) => a.symbol === selectedSymbol) || assets[0];
+  
+  // Find how much of this asset the user owns
+  const portfolioItem = user.portfolio.find((p) => p.symbol === selectedSymbol);
+  const ownedQuantity = portfolioItem?.quantity || 0;
 
   return (
     <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)] w-full max-w-[1920px] mx-auto overflow-hidden">
@@ -44,10 +48,15 @@ export default function TradePageClient({ assets, user }: TradePageClientProps) 
           {/* Right Panel - Order Book + Trade Form */}
           <div className="w-full md:w-80 border-l border-gray-200 dark:border-gray-700 bg-surface-light dark:bg-surface-dark flex flex-col h-full overflow-hidden">
             <TradeOrderBook asset={selectedAsset} />
-            <TradeForm asset={selectedAsset} availableBalance={user.balance} />
+            <TradeForm 
+              asset={selectedAsset} 
+              availableBalance={user.balance}
+              ownedQuantity={ownedQuantity}
+            />
           </div>
         </div>
       </section>
     </div>
   );
 }
+
