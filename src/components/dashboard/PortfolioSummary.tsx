@@ -12,17 +12,17 @@ export default function PortfolioSummary({
   const isPositive = changePercent >= 0;
 
   return (
-    <div className="bg-surface-light dark:bg-surface-dark rounded-xl p-5 shadow-sm border border-border-light dark:border-border-dark">
+    <div className="bg-white dark:bg-surface-dark rounded-2xl p-5 border border-gray-200 dark:border-border-dark">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">
+        <h3 className="text-text-muted text-sm font-medium">
           Toplam Varlıklarım
         </h3>
         <span
           className={`${
             isPositive
-              ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-              : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
-          } text-xs px-2 py-1 rounded-md font-medium flex items-center`}
+              ? "bg-success/10 text-success"
+              : "bg-danger/10 text-danger"
+          } text-xs px-3 py-1 rounded-full font-semibold flex items-center`}
         >
           <TrendingUp className="w-3.5 h-3.5 mr-1" />
           {isPositive ? "+" : ""}
@@ -34,15 +34,15 @@ export default function PortfolioSummary({
         <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
           ${balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
         </h2>
-        <span className="text-sm text-gray-400">USD</span>
+        <span className="text-sm text-text-muted">USD</span>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <button className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-2 rounded-lg text-sm font-medium transition-colors">
+      <div className="mt-5 grid grid-cols-2 gap-3">
+        <button className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white py-3 rounded-full text-sm font-semibold transition-all">
           <ArrowDownToLine className="w-4 h-4" />
           Yatır
         </button>
-        <button className="flex items-center justify-center gap-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 rounded-lg text-sm font-medium transition-colors">
+        <button className="flex items-center justify-center gap-2 bg-gray-100 dark:bg-[#1C1C1E] hover:bg-gray-200 dark:hover:bg-[#2C2C2E] text-gray-800 dark:text-white py-3 rounded-full text-sm font-semibold transition-all">
           <ArrowUpFromLine className="w-4 h-4" />
           Çek
         </button>

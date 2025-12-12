@@ -10,37 +10,49 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Primary brand color
+        // Brand Colors (Midas Blurple)
         primary: {
-          DEFAULT: "#4F46E5",
-          dark: "#4338CA",
-          light: "#6366F1",
+          DEFAULT: "#4E55FF",
+          hover: "#3D44D8",
         },
-        // Status colors
-        success: "#10B981",
-        danger: "#EF4444",
+        // Status Colors
+        success: "#05C46B",
+        danger: "#FF3B30",
         warning: "#F59E0B",
-        // Background colors
+        // Background Colors
         background: {
-          light: "#F3F4F6",
-          dark: "#0F1116",
-        },
-        // Surface/card colors
-        surface: {
           light: "#FFFFFF",
-          dark: "#1E232F",
+          dark: "#000000",
         },
-        // Border colors
+        // Surface/Card Colors
+        surface: {
+          light: "#F4F4F5",
+          dark: "#1C1C1E",
+        },
+        // Border Colors
         border: {
           light: "#E5E7EB",
-          dark: "#2D3748",
+          dark: "#2C2C2E",
+        },
+        // Text Colors
+        text: {
+          // Dark mode
+          main: "#FFFFFF",
+          muted: "#8E8E93",
+          // Light mode
+          "light-main": "#000000",
+          "light-muted": "#6C6C70",
         },
       },
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
       },
       borderRadius: {
-        DEFAULT: "0.5rem",
+        DEFAULT: "12px",
+        lg: "16px",
+        xl: "20px",
+        "2xl": "24px",
+        full: "9999px",
       },
     },
   },

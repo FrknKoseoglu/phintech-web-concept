@@ -27,6 +27,7 @@ export default function RootLayout({
       <head>
         {/* Script to set theme before React hydrates to prevent flash */}
         <script
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `
               (function() {

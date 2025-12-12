@@ -29,7 +29,7 @@ export default function Navbar() {
   const isDark = theme === "dark";
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-surface-dark border-b border-gray-200 dark:border-border-dark shadow-sm h-16">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-black border-b border-gray-200 dark:border-[#1C1C1E] h-16">
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
         {/* Left: Logo & Navigation */}
         <div className="flex items-center space-x-8">
@@ -44,11 +44,10 @@ export default function Navbar() {
                 x="0px"
                 y="0px"
                 viewBox="0 0 62.7 38.3"
-
                 xmlSpace="preserve"
                 className="h-full w-full"
               >
-                <style type="text/css">{`.st0{fill:#4959EA;}`}</style>
+                <style type="text/css">{`.st0{fill:#4E55FF;}`}</style>
                 <ellipse
                   transform="matrix(0.1797 -0.9837 0.9837 0.1797 -25.2876 32.4364)"
                   className="st0"
@@ -83,10 +82,10 @@ export default function Navbar() {
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    "px-3 py-2 text-sm font-medium rounded-md transition-all",
+                    "px-4 py-2 text-sm font-medium rounded-full transition-all",
                     isActive
-                      ? "text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800"
-                      : "text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                      ? "text-white bg-[#1C1C1E]"
+                      : "text-text-muted hover:text-white hover:bg-[#1C1C1E]/50"
                   )}
                 >
                   {link.label}
@@ -103,55 +102,55 @@ export default function Navbar() {
             <input
               type="text"
               placeholder="Sembol, İsim vb. ara..."
-              className="bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg py-1.5 pl-9 pr-12 text-sm w-64 focus:ring-2 focus:ring-primary focus:border-transparent text-gray-800 dark:text-gray-200 placeholder-gray-400"
+              className="bg-[#1C1C1E] border-0 rounded-xl py-2 pl-10 pr-12 text-sm w-64 focus:ring-2 focus:ring-primary text-white placeholder-text-muted"
             />
-            <Search className="absolute left-2.5 top-2 text-gray-400 w-4 h-4" />
-            <div className="absolute right-2 top-1.5 flex items-center space-x-1 pointer-events-none">
-              <span className="text-[10px] bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-1.5 rounded">
+            <Search className="absolute left-3 top-2.5 text-text-muted w-4 h-4" />
+            <div className="absolute right-3 top-2 flex items-center space-x-1 pointer-events-none">
+              <span className="text-[10px] bg-[#2C2C2E] text-text-muted px-1.5 py-0.5 rounded">
                 ⌘K
               </span>
             </div>
           </div>
 
           {/* Help Button */}
-          <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors hidden sm:block">
+          <button className="p-2 rounded-full hover:bg-[#1C1C1E] text-text-muted hover:text-white transition-colors hidden sm:block">
             <HelpCircle className="w-5 h-5" />
           </button>
 
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors"
+            className="p-2 rounded-full hover:bg-[#1C1C1E] text-text-muted hover:text-white transition-colors"
             title={isDark ? "Açık mod" : "Koyu mod"}
           >
             {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
 
           {/* Notifications */}
-          <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors relative">
+          <button className="p-2 rounded-full hover:bg-[#1C1C1E] text-text-muted hover:text-white transition-colors relative">
             <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full ring-2 ring-white dark:ring-surface-dark" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full ring-2 ring-black" />
           </button>
 
           {/* Divider */}
-          <div className="h-8 w-[1px] bg-gray-200 dark:bg-gray-700 mx-2 hidden sm:block" />
+          <div className="h-8 w-[1px] bg-[#1C1C1E] mx-2 hidden sm:block" />
 
           {/* User Profile */}
-          <button className="flex items-center space-x-2 pl-1 pr-1 sm:pr-2 py-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all group">
+          <button className="flex items-center space-x-2 pl-1 pr-1 sm:pr-3 py-1 rounded-full hover:bg-[#1C1C1E] border border-transparent hover:border-[#2C2C2E] transition-all group">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white font-semibold text-sm">
               E
             </div>
             <div className="hidden sm:flex flex-col items-start">
-              <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 group-hover:text-primary">
+              <span className="text-xs font-semibold text-white group-hover:text-primary">
                 Emre Y.
               </span>
-              <span className="text-[10px] text-gray-500 dark:text-gray-400">Pro Üye</span>
+              <span className="text-[10px] text-text-muted">Pro Üye</span>
             </div>
-            <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400 hidden sm:block" />
+            <ChevronDown className="w-4 h-4 text-text-muted hidden sm:block" />
           </button>
 
           {/* Mobile Menu Button */}
-          <button className="lg:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-500">
+          <button className="lg:hidden p-2 rounded-full hover:bg-[#1C1C1E] text-text-muted">
             <Menu className="w-5 h-5" />
           </button>
         </div>

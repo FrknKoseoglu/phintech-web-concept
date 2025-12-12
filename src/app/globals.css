@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    @apply bg-white text-black dark:bg-black dark:text-white transition-colors duration-200;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -12,13 +19,13 @@
   background: transparent;
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: #4b5563;
-}
-
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #2C2C2E;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -26,12 +33,7 @@
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
-}
-
-/* Base styles */
-body {
-  font-feature-settings: "rlig" 1, "calt" 1;
+  background: #3A3A3C;
 }
 
 /* Utility for hiding scrollbar on overflow elements */
@@ -47,4 +49,58 @@ body {
 /* Smooth transitions for theme switching */
 html {
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Midas-style glass effect for cards */
+.glass-card {
+  background: rgba(28, 28, 30, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Midas-style button variants */
+.btn-primary {
+  @apply bg-primary text-white rounded-full font-semibold transition-all;
+}
+.btn-primary:hover {
+  background-color: #3D44D8;
+}
+
+.btn-secondary {
+  @apply text-white rounded-full font-semibold transition-all;
+  background-color: #1C1C1E;
+}
+.btn-secondary:hover {
+  background-color: #2C2C2E;
+}
+
+/* Light mode button variants */
+.light .btn-secondary,
+:not(.dark) .btn-secondary {
+  @apply text-black;
+  background-color: #F4F4F5;
+}
+.light .btn-secondary:hover,
+:not(.dark) .btn-secondary:hover {
+  background-color: #E5E5E7;
+}
+
+/* Midas-style input */
+.input-midas {
+  @apply rounded-xl border-0 transition-all;
+}
+.dark .input-midas {
+  @apply bg-surface-dark text-white;
+}
+.input-midas:not(.dark *) {
+  @apply bg-surface-light text-black;
+}
+.input-midas::placeholder {
+  color: #8E8E93;
+}
+.dark .input-midas::placeholder {
+  color: #8E8E93;
+}
+.input-midas:focus {
+  @apply ring-2 ring-primary outline-none;
 }

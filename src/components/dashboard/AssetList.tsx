@@ -25,7 +25,7 @@ function getAssetIcon(symbol: string) {
     case "ETH":
       return <Gem className={cn(iconClass, "text-purple-500")} />;
     case "AAPL":
-      return <Cpu className={cn(iconClass, "text-gray-800 dark:text-gray-200")} />;
+      return <Cpu className={cn(iconClass, "text-gray-200")} />;
     case "TSLA":
       return <Car className={cn(iconClass, "text-red-500")} />;
     case "XAU":
@@ -35,7 +35,7 @@ function getAssetIcon(symbol: string) {
     case "TRY":
       return <DollarSign className={cn(iconClass, "text-red-600")} />;
     default:
-      return <DollarSign className={cn(iconClass, "text-gray-500")} />;
+      return <DollarSign className={cn(iconClass, "text-text-muted")} />;
   }
 }
 
@@ -52,40 +52,42 @@ function formatPrice(price: number, symbol: string): string {
 
 export default function AssetList({ assets }: AssetListProps) {
   return (
-    <div className="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark flex-1 overflow-hidden flex flex-col">
-      <div className="p-4 border-b border-border-light dark:border-border-dark flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/30">
-        <h3 className="font-semibold text-gray-800 dark:text-gray-200">
+    <div className="bg-white dark:bg-surface-dark rounded-2xl border border-gray-200 dark:border-border-dark flex-1 overflow-hidden flex flex-col">
+      <div className="p-4 border-b border-gray-200 dark:border-border-dark flex justify-between items-center">
+        <h3 className="font-semibold text-gray-800 dark:text-white">
           İzleme Listesi
         </h3>
-        <button className="text-primary text-sm font-medium hover:underline">
+        <button className="text-primary text-sm font-medium hover:text-primary-hover transition-colors">
           Düzenle
         </button>
       </div>
 
       <div className="overflow-y-auto flex-1">
         <table className="w-full text-sm">
-          <tbody className="divide-y divide-border-light dark:divide-border-dark">
+          <tbody className="divide-y divide-gray-100 dark:divide-border-dark">
             {assets.map((asset) => {
               const isPositive = asset.changePercent >= 0;
 
               return (
                 <tr
                   key={asset.symbol}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer group transition-colors"
+                  className="hover:bg-gray-50 dark:hover:bg-[#1C1C1E] cursor-pointer group transition-colors"
                 >
                   <td className="p-4">
                     <div className="flex items-center space-x-3">
-                      {getAssetIcon(asset.symbol)}
+                      <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#1C1C1E] flex items-center justify-center">
+                        {getAssetIcon(asset.symbol)}
+                      </div>
                       <div>
-                        <div className="font-bold text-gray-900 dark:text-gray-100">
+                        <div className="font-bold text-gray-900 dark:text-white">
                           {asset.symbol}
                         </div>
-                        <div className="text-xs text-gray-500">{asset.name}</div>
+                        <div className="text-xs text-gray-500 dark:text-text-muted">{asset.name}</div>
                       </div>
                     </div>
                   </td>
                   <td className="p-4 text-right">
-                    <div className="font-medium text-gray-900 dark:text-gray-100">
+                    <div className="font-semibold text-gray-900 dark:text-white">
                       {formatPrice(asset.price, asset.symbol)}
                     </div>
                     <div
