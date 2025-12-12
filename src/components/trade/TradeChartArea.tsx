@@ -1,6 +1,9 @@
+"use client";
+
 import { LineChart, CandlestickChart } from "lucide-react";
 import type { Asset } from "@/types";
 import { cn } from "@/lib/utils";
+import { useMemo } from "react";
 
 interface TradeChartAreaProps {
   asset: Asset;
@@ -8,16 +11,27 @@ interface TradeChartAreaProps {
 
 const timeRanges = ["15d", "1S", "4S", "1G", "1H"];
 
+// Seeded random number generator for consistent SSR/client values
+function seededRandom(seed: number): () => number {
+  return () => {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
+}
+
 export default function TradeChartArea({ asset }: TradeChartAreaProps) {
   const isPositive = asset.changePercent >= 0;
 
-  // Generate candlestick data
-  const candles = Array.from({ length: 8 }, () => ({
-    height: Math.random() * 50 + 25,
-    bodyStart: Math.random() * 30,
-    bodyHeight: Math.random() * 40 + 20,
-    isGreen: Math.random() > 0.35,
-  }));
+  // Use asset price as seed for consistent random values between server and client
+  const candles = useMemo(() => {
+    const random = seededRandom(Math.floor(asset.price * 100));
+    return Array.from({ length: 8 }, () => ({
+      height: random() * 50 + 25,
+      bodyStart: random() * 30,
+      bodyHeight: random() * 40 + 20,
+      isGreen: random() > 0.35,
+    }));
+  }, [asset.price]);
 
   return (
     <div className="flex-1 flex flex-col relative bg-white dark:bg-gray-900">

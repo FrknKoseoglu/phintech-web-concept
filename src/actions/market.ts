@@ -9,24 +9,18 @@ import { getMarketData, getAssetBySymbol, resetMarketPrices } from "@/lib/market
 import { getUser, resetDb, getTransactions } from "@/lib/db";
 
 /**
- * Server Action: Fetches simulated market data with dynamic prices.
- * Each call returns slightly different prices to simulate live market.
+ * Server Action: Fetches real market data from Yahoo Finance.
+ * Falls back to static data if API fails.
  */
 export async function fetchMarketData(): Promise<Asset[]> {
-  // Simulate network delay for realistic behavior
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  
-  return getMarketData();
+  return await getMarketData();
 }
 
 /**
- * Server Action: Fetches a specific asset by symbol.
+ * Server Action: Fetches a specific asset by symbol with real-time price.
  */
 export async function fetchAsset(symbol: string): Promise<Asset | null> {
-  await new Promise((resolve) => setTimeout(resolve, 50));
-  
-  const asset = getAssetBySymbol(symbol);
-  return asset || null;
+  return await getAssetBySymbol(symbol);
 }
 
 /**

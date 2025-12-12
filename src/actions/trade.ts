@@ -31,7 +31,7 @@ export async function executeTrade(
 
     // ============ FETCH SERVER-SIDE PRICE ============
     // CRITICAL: We fetch the price ourselves, never trust client
-    const asset = getAssetBySymbol(symbol);
+    const asset = await getAssetBySymbol(symbol);
     if (!asset) {
       return { success: false, message: `${symbol} varlığı bulunamadı` };
     }

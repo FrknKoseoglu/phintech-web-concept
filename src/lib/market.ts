@@ -1,172 +1,93 @@
-// ============================================
-// Midas Web Interface - Market Simulation Engine
-// ============================================
+import YahooFinance from 'yahoo-finance2';
+import type { Asset } from '@/types';
 
-import type { Asset, AssetCategory } from "@/types";
+// Yahoo Finance v3 requires instantiation
+const yahooFinance = new YahooFinance();
 
-/**
- * Seed data for market assets with initial prices and categories.
- */
-export const SEED_ASSETS: Asset[] = [
-  {
-    symbol: "AAPL",
-    name: "Apple Inc.",
-    price: 178.50,
-    changePercent: 0,
-    logo: "/logos/aapl.svg",
-    category: "stock",
-  },
-  {
-    symbol: "TSLA",
-    name: "Tesla, Inc.",
-    price: 245.80,
-    changePercent: 0,
-    logo: "/logos/tsla.svg",
-    category: "stock",
-  },
-  {
-    symbol: "BTC",
-    name: "Bitcoin",
-    price: 43250.00,
-    changePercent: 0,
-    logo: "/logos/btc.svg",
-    category: "crypto",
-  },
-  {
-    symbol: "ETH",
-    name: "Ethereum",
-    price: 2280.50,
-    changePercent: 0,
-    logo: "/logos/eth.svg",
-    category: "crypto",
-  },
-  {
-    symbol: "XAU",
-    name: "Gold (oz)",
-    price: 2035.40,
-    changePercent: 0,
-    logo: "/logos/xau.svg",
-    category: "commodity",
-  },
-  {
-    symbol: "TRY",
-    name: "Turkish Lira",
-    price: 0.034,
-    changePercent: 0,
-    logo: "/logos/try.svg",
-    category: "currency",
-  },
-  {
-    symbol: "THY",
-    name: "Turkish Airlines",
-    price: 8.75,
-    changePercent: 0,
-    logo: "/logos/thy.svg",
-    category: "stock",
-  },
+// Quote result type
+interface QuoteResult {
+  symbol: string;
+  regularMarketPrice?: number;
+  regularMarketChangePercent?: number;
+}
+
+// Bizim UI'daki sembollerimiz ile Yahoo'nun sembolleri arasındaki harita
+const SYMBOL_MAP: Record<string, string> = {
+  'BTC': 'BTC-USD',
+  'ETH': 'ETH-USD',
+  'AAPL': 'AAPL',
+  'TSLA': 'TSLA',
+  'NVDA': 'NVDA',
+  'THYAO': 'THYAO.IS',
+  'USD': 'TRY=X',
+  'XAU': 'GC=F' // Altın Ons
+};
+
+// Başlangıç (Yedek) Verisi - Yahoo çalışmazsa bu döner
+const SEED_ASSETS: Asset[] = [
+  { symbol: "BTC", name: "Bitcoin", price: 42000, changePercent: 0, logo: "/logos/btc.svg", category: 'crypto' },
+  { symbol: "ETH", name: "Ethereum", price: 2200, changePercent: 0, logo: "/logos/eth.svg", category: 'crypto' },
+  { symbol: "AAPL", name: "Apple Inc.", price: 180, changePercent: 0, logo: "/logos/aapl.svg", category: 'stock' },
+  { symbol: "TSLA", name: "Tesla Inc.", price: 240, changePercent: 0, logo: "/logos/tsla.svg", category: 'stock' },
+  { symbol: "THYAO", name: "Türk Hava Yolları", price: 260, changePercent: 0, logo: "/logos/thy.svg", category: 'stock' },
+  { symbol: "USD", name: "US Dollar", price: 30, changePercent: 0, logo: "/logos/usd.svg", category: 'commodity' },
 ];
 
-/**
- * Applies a random price change between -2% and +2% to simulate market movement.
- */
-function applyRandomChange(price: number): { newPrice: number; changePercent: number } {
-  const changePercent = (Math.random() * 4 - 2);
-  const newPrice = price * (1 + changePercent / 100);
-  
-  return {
-    newPrice: Math.round(newPrice * 100) / 100,
-    changePercent: Math.round(changePercent * 100) / 100,
-  };
+export async function getMarketData(): Promise<Asset[]> {
+  try {
+    // 1. Yahoo sembollerini bir diziye çevir
+    const yahooSymbols = Object.values(SYMBOL_MAP);
+
+    // 2. Yahoo Finance'den veriyi çek
+    const results = await yahooFinance.quote(yahooSymbols) as QuoteResult[];
+
+    console.log("✅ Yahoo Data Geldi:", results.length, "adet varlık.");
+
+    // 3. Gelen veriyi bizim 'Asset' formatımıza dönüştür
+    const updatedAssets = SEED_ASSETS.map((asset) => {
+      // Bizim sembolümüze karşılık gelen Yahoo sembolünü bul
+      const yahooSymbol = SYMBOL_MAP[asset.symbol];
+      // Sonuçlar arasından bu sembolü bul
+      const quote = results.find((r: QuoteResult) => r.symbol === yahooSymbol);
+
+      if (quote) {
+        return {
+          ...asset,
+          // Fiyat varsa al, yoksa eskisi kalsın
+          price: quote.regularMarketPrice || asset.price,
+          // Yüzde değişim varsa al, yoksa 0
+          changePercent: quote.regularMarketChangePercent || 0,
+        };
+      }
+      return asset;
+    });
+
+    return updatedAssets;
+
+  } catch (error) {
+    console.error("❌ Yahoo Finance Hatası:", error);
+    // Hata olursa site çökmesin, eski (seed) veriyi döndür
+    return SEED_ASSETS;
+  }
 }
 
-/**
- * In-memory price tracker to maintain price continuity between calls.
- */
-let currentPrices: Map<string, number> = new Map();
-
-// Initialize with seed prices
-SEED_ASSETS.forEach((asset) => {
-  currentPrices.set(asset.symbol, asset.price);
-});
-
-/**
- * Gets market data with dynamic pricing simulation.
- */
-export function getMarketData(): Asset[] {
-  return SEED_ASSETS.map((asset) => {
-    const currentPrice = currentPrices.get(asset.symbol) || asset.price;
-    const { newPrice, changePercent } = applyRandomChange(currentPrice);
-    
-    currentPrices.set(asset.symbol, newPrice);
-    
-    return {
-      ...asset,
-      price: newPrice,
-      changePercent,
-    };
-  });
+// Tek bir varlığı bulmak için yardımcı fonksiyon
+export async function getAssetBySymbol(symbol: string): Promise<Asset | undefined> {
+  const market = await getMarketData();
+  return market.find((a) => a.symbol === symbol);
 }
 
-/**
- * Gets market data WITHOUT applying price changes.
- * Used for display where we don't want to mutate prices.
- */
+// Legacy exports for backward compatibility
+export { SEED_ASSETS };
+
 export function getMarketDataSnapshot(): Asset[] {
-  return SEED_ASSETS.map((asset) => {
-    const currentPrice = currentPrices.get(asset.symbol) || asset.price;
-    return {
-      ...asset,
-      price: currentPrice,
-    };
-  });
+  return SEED_ASSETS;
 }
 
-/**
- * Resets prices to their seed values.
- */
 export function resetMarketPrices(): void {
-  currentPrices = new Map();
-  SEED_ASSETS.forEach((asset) => {
-    currentPrices.set(asset.symbol, asset.price);
-  });
+  // No-op in real data mode
 }
 
-/**
- * Gets a specific asset by symbol with current price (applies change).
- */
-export function getAssetBySymbol(symbol: string): Asset | undefined {
-  const asset = SEED_ASSETS.find((a) => a.symbol === symbol);
-  if (!asset) return undefined;
-  
-  const currentPrice = currentPrices.get(symbol) || asset.price;
-  const { newPrice, changePercent } = applyRandomChange(currentPrice);
-  
-  currentPrices.set(symbol, newPrice);
-  
-  return {
-    ...asset,
-    price: newPrice,
-    changePercent,
-  };
-}
-
-/**
- * Gets the current price of a specific asset without applying change.
- */
-export function getAssetPrice(symbol: string): number | null {
-  return currentPrices.get(symbol) || null;
-}
-
-/**
- * Gets asset info by symbol without applying price change.
- */
 export function getAssetInfo(symbol: string): Asset | undefined {
-  const asset = SEED_ASSETS.find((a) => a.symbol === symbol);
-  if (!asset) return undefined;
-  
-  const currentPrice = currentPrices.get(symbol) || asset.price;
-  return {
-    ...asset,
-    price: currentPrice,
-  };
+  return SEED_ASSETS.find((a) => a.symbol === symbol);
 }

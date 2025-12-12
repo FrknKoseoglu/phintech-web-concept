@@ -1,7 +1,7 @@
 {
   "user": {
     "id": "user_001",
-    "balance": 11951.82,
+    "balance": 10877.93,
     "portfolio": [
       {
         "symbol": "TSLA",
@@ -10,8 +10,8 @@
       },
       {
         "symbol": "BTC",
-        "quantity": 0.0124,
-        "avgCost": 42447.89
+        "quantity": 0.024300000000000002,
+        "avgCost": 65853.80411522633
       },
       {
         "symbol": "ETH",
@@ -72,6 +72,15 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1765573525566",
+      "type": "BUY",
+      "symbol": "BTC",
+      "quantity": 0.0119,
+      "price": 90243.16,
+      "total": 1073.893604,
+      "date": "2025-12-12T21:05:25.566Z"
+    },
     {
       "id": "tx_1765568203732",
       "type": "BUY",
