@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Midas - Wallet Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#4F46E5", // Midas Blue/Purple tone
+                        secondary: "#4338ca",
+                        "background-light": "#F8FAFC",
+                        "background-dark": "#0F172A",
+                        "card-light": "#FFFFFF",
+                        "card-dark": "#1E293B",
+                        "text-main-light": "#1E293B",
+                        "text-main-dark": "#F1F5F9",
+                        "text-muted-light": "#64748B",
+                        "text-muted-dark": "#94A3B8",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                        'xl': '1rem',
+                        '2xl': '1.5rem',
+                    },
+                },
+            },
+        };
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-text-main-light dark:text-text-main-dark transition-colors duration-200">
+<nav class="fixed top-0 left-0 right-0 z-50 bg-card-light/95 dark:bg-card-dark/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm transition-all duration-300">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between h-16">
+<div class="flex items-center gap-8 h-full">
+<div class="flex-shrink-0 flex items-center gap-2 cursor-pointer">
+<div class="flex items-end gap-1">
+<div class="w-3 h-3 rounded-full bg-primary"></div>
+<div class="w-3 h-8 rounded-full bg-primary transform -rotate-12"></div>
+<div class="w-3 h-6 rounded-full bg-primary transform rotate-12"></div>
+</div>
+<span class="font-bold text-xl tracking-tight hidden md:block text-text-main-light dark:text-text-main-dark">Midas</span>
+</div>
+<div class="hidden md:flex space-x-2 h-full">
+<a class="h-full flex items-center border-b-2 border-transparent px-3 text-text-muted-light dark:text-text-muted-dark hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors" href="#">Piyasalar</a>
+<a class="h-full flex items-center border-b-2 border-primary px-3 text-primary font-semibold text-sm transition-colors" href="#">Cüzdanım</a>
+<a class="h-full flex items-center border-b-2 border-transparent px-3 text-text-muted-light dark:text-text-muted-dark hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors" href="#">Al/Sat</a>
+<a class="h-full flex items-center border-b-2 border-transparent px-3 text-text-muted-light dark:text-text-muted-dark hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors" href="#">Analiz</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-text-muted-light dark:text-text-muted-dark transition-colors" onclick="document.documentElement.classList.toggle('dark')">
+<span class="material-symbols-outlined">light_mode</span>
+</button>
+<div class="hidden sm:flex items-center gap-3">
+<button class="text-sm font-medium text-text-muted-light dark:text-text-muted-dark hover:text-primary transition-colors">Giriş Yap</button>
+<button class="bg-primary hover:bg-secondary text-white px-5 py-2 rounded-full text-sm font-medium transition-colors shadow-lg shadow-primary/30">
+                            Yatırım Yap
+                        </button>
+</div>
+<button class="md:hidden p-2 rounded-md text-gray-500 hover:text-gray-900 focus:outline-none">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+<div class="lg:col-span-2 bg-card-light dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h2 class="text-sm font-medium text-text-muted-light dark:text-text-muted-dark mb-1">Toplam Varlık Değeri</h2>
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-bold tracking-tight text-text-main-light dark:text-text-main-dark">$124,592.45</span>
+<span class="bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs px-2 py-1 rounded-full font-medium flex items-center">
+<span class="material-symbols-outlined text-sm mr-1">trending_up</span> +2.4%
+                            </span>
+</div>
+<p class="text-xs text-text-muted-light dark:text-text-muted-dark mt-1">≈ ₺4,128,450.21</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 bg-primary hover:bg-secondary text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-md shadow-primary/20">
+<span class="material-symbols-outlined text-lg">add_card</span>
+                            Para Yatır
+                        </button>
+<button class="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-text-main-light dark:text-text-main-dark px-4 py-2 rounded-lg text-sm font-medium transition-all">
+<span class="material-symbols-outlined text-lg">arrow_outward</span>
+                            Çek
+                        </button>
+</div>
+</div>
+<div class="mt-6">
+<div class="flex justify-between text-xs mb-2 text-text-muted-light dark:text-text-muted-dark">
+<span>Varlık Dağılımı</span>
+<span>Detayları Gizle</span>
+</div>
+<div class="w-full h-3 bg-gray-100 dark:bg-gray-800 rounded-full flex overflow-hidden">
+<div class="h-full bg-primary w-[45%]" title="ABD Borsaları"></div>
+<div class="h-full bg-blue-400 w-[25%]" title="BIST"></div>
+<div class="h-full bg-purple-400 w-[20%]" title="Kripto"></div>
+<div class="h-full bg-orange-400 w-[10%]" title="Altın"></div>
+</div>
+<div class="flex flex-wrap gap-4 mt-3">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<span class="text-xs text-text-muted-light dark:text-text-muted-dark">ABD Borsaları %45</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-blue-400"></div>
+<span class="text-xs text-text-muted-light dark:text-text-muted-dark">BIST %25</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-purple-400"></div>
+<span class="text-xs text-text-muted-light dark:text-text-muted-dark">Kripto %20</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-orange-400"></div>
+<span class="text-xs text-text-muted-light dark:text-text-muted-dark">Altın %10</span>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-gradient-to-br from-primary to-purple-600 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden group cursor-pointer">
+<div class="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-110 transition-transform"></div>
+<h3 class="text-lg font-bold mb-2 relative z-10">Midas Plus'a Geç</h3>
+<p class="text-white/80 text-sm mb-4 relative z-10">Daha düşük komisyonlar ve canlı veri akışı ile yatırımlarını güçlendir.</p>
+<button class="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors relative z-10 border border-white/10">
+                    Planları İncele
+                </button>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+<div class="hidden lg:block lg:col-span-1 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 bg-card-light dark:bg-card-dark text-primary font-medium rounded-xl shadow-sm border border-primary/10" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+                    Varlık Özeti
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-text-muted-light dark:text-text-muted-dark hover:bg-card-light dark:hover:bg-card-dark hover:text-text-main-light dark:hover:text-text-main-dark rounded-xl transition-colors" href="#">
+<span class="material-symbols-outlined">show_chart</span>
+                    Borsa İstanbul
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-text-muted-light dark:text-text-muted-dark hover:bg-card-light dark:hover:bg-card-dark hover:text-text-main-light dark:hover:text-text-main-dark rounded-xl transition-colors" href="#">
+<span class="material-symbols-outlined">public</span>
+                    ABD Borsaları
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-text-muted-light dark:text-text-muted-dark hover:bg-card-light dark:hover:bg-card-dark hover:text-text-main-light dark:hover:text-text-main-dark rounded-xl transition-colors" href="#">
+<span class="material-symbols-outlined">currency_bitcoin</span>
+                    Kripto Varlıklar
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-text-muted-light dark:text-text-muted-dark hover:bg-card-light dark:hover:bg-card-dark hover:text-text-main-light dark:hover:text-text-main-dark rounded-xl transition-colors" href="#">
+<span class="material-symbols-outlined">history</span>
+                    İşlem Geçmişi
+                </a>
+</div>
+<div class="lg:col-span-3">
+<div class="bg-card-light dark:bg-card-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+<div class="p-4 border-b border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div class="flex space-x-1 bg-gray-100 dark:bg-gray-800/50 p-1 rounded-lg w-fit">
+<button class="px-4 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-700 text-primary shadow-sm">Tümü</button>
+<button class="px-4 py-1.5 text-sm font-medium rounded-md text-text-muted-light dark:text-text-muted-dark hover:text-text-main-light dark:hover:text-text-main-dark">Spot</button>
+<button class="px-4 py-1.5 text-sm font-medium rounded-md text-text-muted-light dark:text-text-muted-dark hover:text-text-main-light dark:hover:text-text-main-dark">Funding</button>
+</div>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-gray-400 text-lg">search</span>
+</span>
+<input class="pl-10 pr-4 py-2 border-none ring-1 ring-gray-200 dark:ring-gray-700 bg-gray-50 dark:bg-gray-800 text-sm rounded-lg w-full sm:w-64 focus:ring-2 focus:ring-primary focus:outline-none dark:text-white placeholder-gray-400" placeholder="Varlık ara..." type="text"/>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm">
+<thead class="bg-gray-50 dark:bg-gray-800/50 text-text-muted-light dark:text-text-muted-dark font-medium uppercase text-xs">
+<tr>
+<th class="px-6 py-4" scope="col">Varlık</th>
+<th class="px-6 py-4" scope="col">Fiyat</th>
+<th class="px-6 py-4" scope="col">Değişim (24s)</th>
+<th class="px-6 py-4" scope="col">Bakiye</th>
+<th class="px-6 py-4 text-right" scope="col">Değer (USD)</th>
+<th class="px-6 py-4 text-right" scope="col">İşlem</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+<tr class="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-black flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-base">laptop_mac</span>
+</div>
+<div>
+<div class="font-bold text-text-main-light dark:text-text-main-dark">AAPL</div>
+<div class="text-xs text-text-muted-light dark:text-text-muted-dark">Apple Inc.</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-text-main-light dark:text-text-main-dark font-medium">$193.16</td>
+<td class="px-6 py-4">
+<span class="text-green-600 dark:text-green-400 flex items-center gap-1 font-medium">
+<span class="material-symbols-outlined text-sm">arrow_drop_up</span> 0.85%
+                                        </span>
+</td>
+<td class="px-6 py-4 text-text-main-light dark:text-text-main-dark">
+<div class="font-medium">50.00</div>
+</td>
+<td class="px-6 py-4 text-right text-text-main-light dark:text-text-main-dark font-bold">
+                                        $9,658.00
+                                    </td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary hover:text-secondary font-medium text-xs">Al</button>
+<span class="mx-1 text-gray-300">|</span>
+<button class="text-primary hover:text-secondary font-medium text-xs">Sat</button>
+</td>
+</tr>
+<tr class="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-white font-bold text-xs">
+                                                T
+                                            </div>
+<div>
+<div class="font-bold text-text-main-light dark:text-text-main-dark">TSLA</div>
+<div class="text-xs text-text-muted-light dark:text-text-muted-dark">Tesla Inc.</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-text-main-light dark:text-text-main-dark font-medium">$227.50</td>
+<td class="px-6 py-4">
+<span class="text-red-500 dark:text-red-400 flex items-center gap-1 font-medium">
+<span class="material-symbols-outlined text-sm">arrow_drop_down</span> 1.74%
+                                        </span>
+</td>
+<td class="px-6 py-4 text-text-main-light dark:text-text-main-dark">
+<div class="font-medium">20.00</div>
+</td>
+<td class="px-6 py-4 text-right text-text-main-light dark:text-text-main-dark font-bold">
+                                        $4,550.00
+                                    </td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary hover:text-secondary font-medium text-xs">Al</button>
+<span class="mx-1 text-gray-300">|</span>
+<button class="text-primary hover:text-secondary font-medium text-xs">Sat</button>
+</td>
+</tr>
+<tr class="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-base">currency_bitcoin</span>
+</div>
+<div>
+<div class="font-bold text-text-main-light dark:text-text-main-dark">BTC</div>
+<div class="text-xs text-text-muted-light dark:text-text-muted-dark">Bitcoin</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-text-main-light dark:text-text-main-dark font-medium">$42,285.01</td>
+<td class="px-6 py-4">
+<span class="text-green-600 dark:text-green-400 flex items-center gap-1 font-medium">
+<span class="material-symbols-outlined text-sm">arrow_drop_up</span> 7.01%
+                                        </span>
+</td>
+<td class="px-6 py-4 text-text-main-light dark:text-text-main-dark">
+<div class="font-medium">0.4521</div>
+</td>
+<td class="px-6 py-4 text-right text-text-main-light dark:text-text-main-dark font-bold">
+                                        $19,117.05
+                                    </td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary hover:text-secondary font-medium text-xs">Al</button>
+<span class="mx-1 text-gray-300">|</span>
+<button class="text-primary hover:text-secondary font-medium text-xs">Sat</button>
+</td>
+</tr>
+<tr class="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-red-700 flex items-center justify-center text-white text-xs font-bold">
+                                                THY
+                                            </div>
+<div>
+<div class="font-bold text-text-main-light dark:text-text-main-dark">THYAO</div>
+<div class="text-xs text-text-muted-light dark:text-text-muted-dark">Türk Hava Yolları</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-text-main-light dark:text-text-main-dark font-medium">₺256.50</td>
+<td class="px-6 py-4">
+<span class="text-green-600 dark:text-green-400 flex items-center gap-1 font-medium">
+<span class="material-symbols-outlined text-sm">arrow_drop_up</span> 1.2%
+                                        </span>
+</td>
+<td class="px-6 py-4 text-text-main-light dark:text-text-main-dark">
+<div class="font-medium">1,000</div>
+</td>
+<td class="px-6 py-4 text-right text-text-main-light dark:text-text-main-dark font-bold">
+                                        $8,550.00
+                                    </td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary hover:text-secondary font-medium text-xs">Al</button>
+<span class="mx-1 text-gray-300">|</span>
+<button class="text-primary hover:text-secondary font-medium text-xs">Sat</button>
+</td>
+</tr>
+<tr class="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-base">attach_money</span>
+</div>
+<div>
+<div class="font-bold text-text-main-light dark:text-text-main-dark">USD</div>
+<div class="text-xs text-text-muted-light dark:text-text-muted-dark">US Dollar</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-text-main-light dark:text-text-main-dark font-medium">$1.00</td>
+<td class="px-6 py-4">
+<span class="text-gray-400 flex items-center gap-1 font-medium">
+                                            - 0.00%
+                                        </span>
+</td>
+<td class="px-6 py-4 text-text-main-light dark:text-text-main-dark">
+<div class="font-medium">82,717.40</div>
+</td>
+<td class="px-6 py-4 text-right text-text-main-light dark:text-text-main-dark font-bold">
+                                        $82,717.40
+                                    </td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary hover:text-secondary font-medium text-xs">Yatır</button>
+<span class="mx-1 text-gray-300">|</span>
+<button class="text-primary hover:text-secondary font-medium text-xs">Çek</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+<span class="text-xs text-text-muted-light dark:text-text-muted-dark">1-5 arası gösteriliyor (Toplam 12 varlık)</span>
+<div class="flex gap-2">
+<button class="px-3 py-1 rounded border border-gray-200 dark:border-gray-700 text-xs text-text-muted-light dark:text-text-muted-dark hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50">Geri</button>
+<button class="px-3 py-1 rounded border border-gray-200 dark:border-gray-700 text-xs text-text-muted-light dark:text-text-muted-dark hover:bg-gray-50 dark:hover:bg-gray-700">İleri</button>
+</div>
+</div>
+</div>
+<div class="mt-6 bg-card-light dark:bg-card-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-lg font-semibold text-text-main-light dark:text-text-main-dark">Son İşlemler</h3>
+<a class="text-primary text-sm font-medium hover:underline" href="#">Tümünü Gör</a>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
+<div class="flex items-center gap-3">
+<div class="bg-green-100 dark:bg-green-900/30 p-2 rounded-full">
+<span class="material-symbols-outlined text-green-600 dark:text-green-400 text-sm">download</span>
+</div>
+<div>
+<div class="text-sm font-medium text-text-main-light dark:text-text-main-dark">Para Yatırma (USD)</div>
+<div class="text-xs text-text-muted-light dark:text-text-muted-dark">Bugün, 14:20</div>
+</div>
+</div>
+<div class="text-right">
+<div class="text-sm font-bold text-green-600 dark:text-green-400">+$2,000.00</div>
+<div class="text-xs text-text-muted-light dark:text-text-muted-dark">Başarılı</div>
+</div>
+</div>
+<div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
+<div class="flex items-center gap-3">
+<div class="bg-red-100 dark:bg-red-900/30 p-2 rounded-full">
+<span class="material-symbols-outlined text-red-600 dark:text-red-400 text-sm">shopping_cart</span>
+</div>
+<div>
+<div class="text-sm font-medium text-text-main-light dark:text-text-main-dark">TSLA Satın Alım</div>
+<div class="text-xs text-text-muted-light dark:text-text-muted-dark">Dün, 09:15</div>
+</div>
+</div>
+<div class="text-right">
+<div class="text-sm font-bold text-text-main-light dark:text-text-main-dark">-$455.00</div>
+<div class="text-xs text-text-muted-light dark:text-text-muted-dark">2.0 Adet</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="lg:hidden fixed bottom-0 left-0 w-full bg-card-light dark:bg-card-dark border-t border-gray-200 dark:border-gray-700 p-4 z-40 flex justify-around">
+<a class="flex flex-col items-center text-primary" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="text-[10px] mt-1 font-medium">Cüzdan</span>
+</a>
+<a class="flex flex-col items-center text-text-muted-light dark:text-text-muted-dark" href="#">
+<span class="material-symbols-outlined">candlestick_chart</span>
+<span class="text-[10px] mt-1 font-medium">Piyasa</span>
+</a>
+<div class="relative -top-6">
+<button class="bg-primary text-white rounded-full p-3 shadow-lg shadow-primary/40">
+<span class="material-symbols-outlined text-2xl">sync_alt</span>
+</button>
+</div>
+<a class="flex flex-col items-center text-text-muted-light dark:text-text-muted-dark" href="#">
+<span class="material-symbols-outlined">notifications</span>
+<span class="text-[10px] mt-1 font-medium">Bildirimler</span>
+</a>
+<a class="flex flex-col items-center text-text-muted-light dark:text-text-muted-dark" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] mt-1 font-medium">Hesap</span>
+</a>
+</div>
+</body></html>
