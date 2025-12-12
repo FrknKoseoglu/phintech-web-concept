@@ -1,0 +1,58 @@
+{
+    "user": {
+        "id": "user_001",
+        "balance": 10000,
+        "portfolio": []
+    },
+    "market": [
+        {
+            "symbol": "AAPL",
+            "name": "Apple Inc.",
+            "price": 178.50,
+            "changePercent": 0,
+            "logo": "/logos/aapl.svg"
+        },
+        {
+            "symbol": "TSLA",
+            "name": "Tesla, Inc.",
+            "price": 245.80,
+            "changePercent": 0,
+            "logo": "/logos/tsla.svg"
+        },
+        {
+            "symbol": "BTC",
+            "name": "Bitcoin",
+            "price": 43250.00,
+            "changePercent": 0,
+            "logo": "/logos/btc.svg"
+        },
+        {
+            "symbol": "ETH",
+            "name": "Ethereum",
+            "price": 2280.50,
+            "changePercent": 0,
+            "logo": "/logos/eth.svg"
+        },
+        {
+            "symbol": "XAU",
+            "name": "Gold (oz)",
+            "price": 2035.40,
+            "changePercent": 0,
+            "logo": "/logos/xau.svg"
+        },
+        {
+            "symbol": "TRY",
+            "name": "Turkish Lira",
+            "price": 0.034,
+            "changePercent": 0,
+            "logo": "/logos/try.svg"
+        },
+        {
+            "symbol": "THY",
+            "name": "Turkish Airlines",
+            "price": 8.75,
+            "changePercent": 0,
+            "logo": "/logos/thy.svg"
+        }
+    ]
+}

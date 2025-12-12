@@ -1,0 +1,58 @@
+{
+  "node": {
+    "0022fde03fa2797f51800b7d82577c7e84bfa9a11b": {
+      "workers": {
+        "app/test/page": {
+          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5Cdev%5C%5Cmidas-web-concept%5C%5Csrc%5C%5Cactions%5C%5Cmarket.ts%22%2C%5B%7B%22id%22%3A%220022fde03fa2797f51800b7d82577c7e84bfa9a11b%22%2C%22exportedName%22%3A%22resetAllData%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cdev%5C%5Cmidas-web-concept%5C%5Csrc%5C%5Cactions%5C%5Cmarket.ts%22%7D%2C%7B%22id%22%3A%220051e941223ba35124d5bd2a6253294d2af1387b7c%22%2C%22exportedName%22%3A%22fetchMarketData%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cdev%5C%5Cmidas-web-concept%5C%5Csrc%5C%5Cactions%5C%5Cmarket.ts%22%7D%2C%7B%22id%22%3A%2200ea7a7e60f2f44ee83f7a6e129da075bc42ff6c57%22%2C%22exportedName%22%3A%22fetchUser%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cdev%5C%5Cmidas-web-concept%5C%5Csrc%5C%5Cactions%5C%5Cmarket.ts%22%7D%2C%7B%22id%22%3A%2240b984628c0487988410191286da733a48231c528b%22%2C%22exportedName%22%3A%22fetchAsset%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cdev%5C%5Cmidas-web-concept%5C%5Csrc%5C%5Cactions%5C%5Cmarket.ts%22%7D%5D%5D%5D&__client_imported__=!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/test/page": "rsc"
+      },
+      "filename": "../D:\\dev\\midas-web-concept\\src\\actions\\market.ts",
+      "exportedName": "resetAllData"
+    },
+    "0051e941223ba35124d5bd2a6253294d2af1387b7c": {
+      "workers": {
+        "app/test/page": {
+          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5Cdev%5C%5Cmidas-web-concept%5C%5Csrc%5C%5Cactions%5C%5Cmarket.ts%22%2C%5B%7B%22id%22%3A%220022fde03fa2797f51800b7d82577c7e84bfa9a11b%22%2C%22exportedName%22%3A%22resetAllData%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cdev%5C%5Cmidas-web-concept%5C%5Csrc%5C%5Cactions%5C%5Cmarket.ts%22%7D%2C%7B%22id%22%3A%220051e941223ba35124d5bd2a6253294d2af1387b7c%22%2C%22exportedName%22%3A%22fetchMarketData%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cdev%5C%5Cmidas-web-concept%5C%5Csrc%5C%5Cactions%5C%5Cmarket.ts%22%7D%2C%7B%22id%22%3A%2200ea7a7e60f2f44ee83f7a6e129da075bc42ff6c57%22%2C%22exportedName%22%3A%22fetchUser%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cdev%5C%5Cmidas-web-concept%5C%5Csrc%5C%5Cactions%5C%5Cmarket.ts%22%7D%2C%7B%22id%22%3A%2240b984628c0487988410191286da733a48231c528b%22%2C%22exportedName%22%3A%22fetchAsset%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cdev%5C%5Cmidas-web-concept%5C%5Csrc%5C%5Cactions%5C%5Cmarket.ts%22%7D%5D%5D%5D&__client_imported__=!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/test/page": "rsc"
+      },
+      "filename": "../D:\\dev\\midas-web-concept\\src\\actions\\market.ts",
+      "exportedName": "fetchMarketData"
+    },
+    "00ea7a7e60f2f44ee83f7a6e129da075bc42ff6c57": {
+      "workers": {
+        "app/test/page": {
+          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5Cdev%5C%5Cmidas-web-concept%5C%5Csrc%5C%5Cactions%5C%5Cmarket.ts%22%2C%5B%7B%22id%22%3A%220022fde03fa2797f51800b7d82577c7e84bfa9a11b%22%2C%22exportedName%22%3A%22resetAllData%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cdev%5C%5Cmidas-web-concept%5C%5Csrc%5C%5Cactions%5C%5Cmarket.ts%22%7D%2C%7B%22id%22%3A%220051e941223ba35124d5bd2a6253294d2af1387b7c%22%2C%22exportedName%22%3A%22fetchMarketData%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cdev%5C%5Cmidas-web-concept%5C%5Csrc%5C%5Cactions%5C%5Cmarket.ts%22%7D%2C%7B%22id%22%3A%2200ea7a7e60f2f44ee83f7a6e129da075bc42ff6c57%22%2C%22exportedName%22%3A%22fetchUser%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cdev%5C%5Cmidas-web-concept%5C%5Csrc%5C%5Cactions%5C%5Cmarket.ts%22%7D%2C%7B%22id%22%3A%2240b984628c0487988410191286da733a48231c528b%22%2C%22exportedName%22%3A%22fetchAsset%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cdev%5C%5Cmidas-web-concept%5C%5Csrc%5C%5Cactions%5C%5Cmarket.ts%22%7D%5D%5D%5D&__client_imported__=!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/test/page": "rsc"
+      },
+      "filename": "../D:\\dev\\midas-web-concept\\src\\actions\\market.ts",
+      "exportedName": "fetchUser"
+    },
+    "40b984628c0487988410191286da733a48231c528b": {
+      "workers": {
+        "app/test/page": {
+          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5Cdev%5C%5Cmidas-web-concept%5C%5Csrc%5C%5Cactions%5C%5Cmarket.ts%22%2C%5B%7B%22id%22%3A%220022fde03fa2797f51800b7d82577c7e84bfa9a11b%22%2C%22exportedName%22%3A%22resetAllData%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cdev%5C%5Cmidas-web-concept%5C%5Csrc%5C%5Cactions%5C%5Cmarket.ts%22%7D%2C%7B%22id%22%3A%220051e941223ba35124d5bd2a6253294d2af1387b7c%22%2C%22exportedName%22%3A%22fetchMarketData%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cdev%5C%5Cmidas-web-concept%5C%5Csrc%5C%5Cactions%5C%5Cmarket.ts%22%7D%2C%7B%22id%22%3A%2200ea7a7e60f2f44ee83f7a6e129da075bc42ff6c57%22%2C%22exportedName%22%3A%22fetchUser%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cdev%5C%5Cmidas-web-concept%5C%5Csrc%5C%5Cactions%5C%5Cmarket.ts%22%7D%2C%7B%22id%22%3A%2240b984628c0487988410191286da733a48231c528b%22%2C%22exportedName%22%3A%22fetchAsset%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cdev%5C%5Cmidas-web-concept%5C%5Csrc%5C%5Cactions%5C%5Cmarket.ts%22%7D%5D%5D%5D&__client_imported__=!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/test/page": "rsc"
+      },
+      "filename": "../D:\\dev\\midas-web-concept\\src\\actions\\market.ts",
+      "exportedName": "fetchAsset"
+    }
+  },
+  "edge": {},
+  "encryptionKey": "MNfxA9HLc+xeGyEf4JwlTLlEI4sv89P7/ncDn2sB2P4="
+}
