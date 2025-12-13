@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import type { Asset, User } from "@/types";
 import AssetList from "./AssetList";
 import ChartArea from "./ChartArea";
@@ -16,6 +17,7 @@ interface DashboardManagerProps {
 }
 
 export default function DashboardManager({ marketData, user, children }: DashboardManagerProps) {
+  const { data: session } = useSession();
   const [selectedSymbol, setSelectedSymbol] = useState("BTC");
   
   // Get the selected asset from market data
@@ -37,7 +39,8 @@ export default function DashboardManager({ marketData, user, children }: Dashboa
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column - Portfolio & Watchlist */}
         <div className="lg:col-span-3 flex flex-col gap-6">
-          <PortfolioSummary balance={user.balance} />
+          {/* Show PortfolioSummary only when logged in */}
+          {session && <PortfolioSummary balance={user.balance} />}
           <AssetList 
             assets={marketData} 
             selectedSymbol={selectedSymbol}

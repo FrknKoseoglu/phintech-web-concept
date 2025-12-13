@@ -20,10 +20,10 @@ import { useState } from "react";
 
 const navLinks = [
   { href: "/", label: "Panel" },
-  { href: "/markets", label: "Piyasalar" },
+  // { href: "/markets", label: "Piyasalar" }, // Şimdilik gizli
   { href: "/trade", label: "Al-Sat" },
   { href: "/wallet", label: "Portföy" },
-  { href: "/analysis", label: "Analiz" },
+  // { href: "/analysis", label: "Analiz" }, // Şimdilik gizli
   { href: "/news", label: "Haberler" },
 ];
 

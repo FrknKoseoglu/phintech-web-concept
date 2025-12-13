@@ -3,7 +3,10 @@ import { getMarketDataSnapshot } from "@/lib/market";
 import type { PortfolioHolding, AssetCategory } from "@/types";
 import { TrendingUp, TrendingDown, ArrowDownToLine, ArrowUpFromLine, Search } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import RecentTransactions from "@/components/wallet/RecentTransactions";
 import WalletSidebar from "@/components/wallet/WalletSidebar";
 
@@ -19,6 +22,12 @@ interface WalletPageProps {
 }
 
 export default async function WalletPage({ searchParams }: WalletPageProps) {
+  // Check authentication - redirect to login if not authenticated
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    redirect("/login?callbackUrl=/wallet");
+  }
+
   // Await searchParams (Next.js 15 requirement)
   const params = await searchParams;
   const categoryFilter = params.category as AssetCategory | undefined;
