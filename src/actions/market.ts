@@ -4,9 +4,12 @@
 // Midas Web Interface - Market Server Actions
 // ============================================
 
-import type { Asset, User, Transaction } from "@/types";
+import type { Asset, User, Transaction, PortfolioItem } from "@/types";
 import { getMarketData, getAssetBySymbol, resetMarketPrices } from "@/lib/market";
-import { getUser, resetDb, getTransactions } from "@/lib/db";
+import prisma from "@/lib/prisma";
+
+// Default user ID for demo (in production, get from session)
+const DEMO_USER_ID = "demo_user_001";
 
 /**
  * Server Action: Fetches real market data from Yahoo Finance.
@@ -20,23 +23,69 @@ export async function fetchMarketData(): Promise<Asset[]> {
  * Server Action: Fetches a specific asset by symbol with real-time price.
  */
 export async function fetchAsset(symbol: string): Promise<Asset | null> {
-  return await getAssetBySymbol(symbol);
+  const asset = await getAssetBySymbol(symbol);
+  return asset ?? null;
 }
 
 /**
  * Server Action: Fetches the current user data from the database.
  */
 export async function fetchUser(): Promise<User> {
-  return getUser();
+  let user = await prisma.user.findUnique({
+    where: { id: DEMO_USER_ID },
+    include: {
+      portfolio: true,
+    },
+  });
+
+  // Create demo user if not exists
+  if (!user) {
+    user = await prisma.user.create({
+      data: {
+        id: DEMO_USER_ID,
+        email: "demo@midas.app",
+        name: "Demo User",
+        balance: 100000, // $100k starting bonus
+        favorites: ["BTC", "ETH", "AAPL"],
+      },
+      include: {
+        portfolio: true,
+      },
+    });
+  }
+
+  // Transform to match User type
+  return {
+    id: user.id,
+    balance: user.balance,
+    portfolio: user.portfolio.map((p: { symbol: string; quantity: number; avgCost: number }) => ({
+      symbol: p.symbol,
+      quantity: p.quantity,
+      avgCost: p.avgCost,
+    })),
+    favorites: user.favorites,
+  };
 }
 
 /**
- * Server Action: Resets all data to initial state.
+ * Server Action: Resets all user data to initial state.
  * Useful for testing and demo purposes.
  */
 export async function resetAllData(): Promise<{ success: boolean }> {
   try {
-    await resetDb();
+    // Delete all user's transactions and portfolio
+    await prisma.$transaction([
+      prisma.transaction.deleteMany({ where: { userId: DEMO_USER_ID } }),
+      prisma.portfolioItem.deleteMany({ where: { userId: DEMO_USER_ID } }),
+      prisma.user.update({
+        where: { id: DEMO_USER_ID },
+        data: {
+          balance: 100000,
+          favorites: ["BTC", "ETH", "AAPL"],
+        },
+      }),
+    ]);
+    
     resetMarketPrices();
     return { success: true };
   } catch (error) {
@@ -49,7 +98,21 @@ export async function resetAllData(): Promise<{ success: boolean }> {
  * Server Action: Fetches transactions from the database.
  */
 export async function fetchTransactions(): Promise<Transaction[]> {
-  return getTransactions();
+  const transactions = await prisma.transaction.findMany({
+    where: { userId: DEMO_USER_ID },
+    orderBy: { date: "desc" },
+    take: 100,
+  });
+
+  return transactions.map((t: { id: string; type: string; symbol: string; quantity: number; price: number; total: number; date: Date }) => ({
+    id: t.id,
+    type: t.type as "BUY" | "SELL" | "DEPOSIT",
+    symbol: t.symbol,
+    quantity: t.quantity,
+    price: t.price,
+    total: t.total,
+    date: t.date.toISOString(),
+  }));
 }
 
 // ============================================
