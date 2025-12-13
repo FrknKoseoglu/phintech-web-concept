@@ -5,6 +5,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import AuthProvider from "@/components/AuthProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -47,23 +48,25 @@ export default function RootLayout({
       <body
         className={`${inter.variable} font-sans bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-200 antialiased min-h-screen flex flex-col transition-colors duration-200`}
       >
-        <ThemeProvider>
-          <Navbar />
-          <main className="flex-1 pt-16">{children}</main>
-          <Footer />
-          <Toaster 
-            position="top-right" 
-            richColors
-            theme="dark"
-            toastOptions={{
-              style: {
-                background: '#1C1C1E',
-                border: '1px solid #2C2C2E',
-                color: '#FFFFFF',
-              },
-            }}
-          />
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <Navbar />
+            <main className="flex-1 pt-16">{children}</main>
+            <Footer />
+            <Toaster 
+              position="top-right" 
+              richColors
+              theme="dark"
+              toastOptions={{
+                style: {
+                  background: '#1C1C1E',
+                  border: '1px solid #2C2C2E',
+                  color: '#FFFFFF',
+                },
+              }}
+            />
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

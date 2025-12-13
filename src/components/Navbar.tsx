@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import {
   Search,
   Bell,
@@ -10,9 +11,12 @@ import {
   Menu,
   Sun,
   Moon,
+  LogOut,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/ThemeProvider";
+import { useState } from "react";
 
 const navLinks = [
   { href: "/", label: "Panel" },
@@ -25,8 +29,20 @@ const navLinks = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
+  const { data: session, status } = useSession();
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const isLoading = status === "loading";
+  const isAuthenticated = !!session?.user;
+
+  const handleSignOut = async () => {
+    await signOut({ redirect: false });
+    router.push("/");
+    setShowDropdown(false);
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 h-16">
@@ -135,19 +151,63 @@ export default function Navbar() {
           {/* Divider */}
           <div className="h-8 w-[1px] bg-[#1C1C1E] mx-2 hidden sm:block" />
 
-          {/* User Profile */}
-          <button className="flex items-center space-x-2 pl-1 pr-1 sm:pr-3 py-1 rounded-full hover:bg-[#1C1C1E] border border-transparent hover:border-[#2C2C2E] transition-all group">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white font-semibold text-sm">
-              E
+          {/* User Profile / Login Button */}
+          {isLoading ? (
+            <div className="w-8 h-8 rounded-full bg-[#1C1C1E] animate-pulse" />
+          ) : isAuthenticated ? (
+            <div className="relative">
+              <button
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="flex items-center space-x-2 pl-1 pr-1 sm:pr-3 py-1 rounded-full hover:bg-[#1C1C1E] border border-transparent hover:border-[#2C2C2E] transition-all group"
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white font-semibold text-sm">
+                  {session.user?.name?.charAt(0).toUpperCase() || "U"}
+                </div>
+                <div className="hidden sm:flex flex-col items-start">
+                  <span className="text-xs font-semibold text-white group-hover:text-primary">
+                    {session.user?.name || "Hesabım"}
+                  </span>
+                  <span className="text-[10px] text-text-muted">
+                    {session.user?.email?.split("@")[0] || "Kullanıcı"}
+                  </span>
+                </div>
+                <ChevronDown className="w-4 h-4 text-text-muted hidden sm:block" />
+              </button>
+
+              {/* Dropdown Menu */}
+              {showDropdown && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setShowDropdown(false)}
+                  />
+                  <div className="absolute right-0 top-12 w-48 bg-[#1C1C1E] rounded-xl border border-gray-800 shadow-xl z-20 py-2">
+                    <div className="px-4 py-2 border-b border-gray-800">
+                      <p className="text-xs text-gray-400">Giriş yapıldı</p>
+                      <p className="text-sm text-white truncate">
+                        {session.user?.email}
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-danger hover:bg-danger/10 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Çıkış Yap
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
-            <div className="hidden sm:flex flex-col items-start">
-              <span className="text-xs font-semibold text-white group-hover:text-primary">
-                Emre Y.
-              </span>
-              <span className="text-[10px] text-text-muted">Pro Üye</span>
-            </div>
-            <ChevronDown className="w-4 h-4 text-text-muted hidden sm:block" />
-          </button>
+          ) : (
+            <Link
+              href="/login"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-white text-black font-semibold text-sm hover:bg-gray-100 transition-all"
+            >
+              <User className="w-4 h-4" />
+              <span className="hidden sm:inline">Giriş Yap</span>
+            </Link>
+          )}
 
           {/* Mobile Menu Button */}
           <button className="lg:hidden p-2 rounded-full hover:bg-[#1C1C1E] text-text-muted">

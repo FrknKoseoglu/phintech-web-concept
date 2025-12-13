@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo, useTransition } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Asset } from "@/types";
@@ -18,6 +20,8 @@ export default function TradeForm({
   availableBalance,
   ownedQuantity = 0,
 }: TradeFormProps) {
+  const { data: session } = useSession();
+  const router = useRouter();
   const [isBuy, setIsBuy] = useState(true);
   const [quantity, setQuantity] = useState("");
   const [sliderValue, setSliderValue] = useState(0);
@@ -61,6 +65,17 @@ export default function TradeForm({
 
   // Handle trade submission
   const handleSubmit = () => {
+    // Check authentication
+    if (!session) {
+      toast.error("İşlem yapmak için lütfen giriş yapın.", {
+        action: {
+          label: "Giriş Yap",
+          onClick: () => router.push("/login"),
+        },
+      });
+      return;
+    }
+
     if (!isValidOrder || isPending) return;
 
     const qty = parseFloat(quantity);

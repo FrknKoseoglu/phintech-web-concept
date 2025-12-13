@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { executeTrade } from "@/actions/trade";
 import type { Asset } from "@/types";
@@ -16,6 +18,8 @@ export default function QuickTrade({
   selectedAsset,
   availableBalance,
 }: QuickTradeProps) {
+  const { data: session } = useSession();
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [mode, setMode] = useState<"BUY" | "SELL">("BUY");
   const [symbol, setSymbol] = useState(selectedAsset?.symbol || "BTC");
@@ -37,6 +41,17 @@ export default function QuickTrade({
   const accentColor = isBuy ? "success" : "danger";
 
   const handleSubmit = () => {
+    // Check authentication
+    if (!session) {
+      toast.error("İşlem yapmak için lütfen giriş yapın.", {
+        action: {
+          label: "Giriş Yap",
+          onClick: () => router.push("/login"),
+        },
+      });
+      return;
+    }
+
     const qty = parseFloat(quantity);
     if (!qty || qty <= 0) {
       toast.error("Lütfen geçerli bir miktar girin");
