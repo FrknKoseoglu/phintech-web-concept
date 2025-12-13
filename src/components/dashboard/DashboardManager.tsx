@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import type { Asset, User } from "@/types";
 import AssetList from "./AssetList";
@@ -23,6 +23,24 @@ export default function DashboardManager({ marketData, user, children }: Dashboa
   // Get the selected asset from market data
   const selectedAsset = marketData.find((a) => a.symbol === selectedSymbol) || marketData[0];
 
+  // Calculate total holdings value and P/L
+  const { holdingsValue, profitLoss } = useMemo(() => {
+    let totalValue = 0;
+    let totalPL = 0;
+
+    user.portfolio.forEach((item) => {
+      const asset = marketData.find((a) => a.symbol === item.symbol);
+      if (asset) {
+        const currentValue = item.quantity * asset.price;
+        const costBasis = item.quantity * item.avgCost;
+        totalValue += currentValue;
+        totalPL += currentValue - costBasis;
+      }
+    });
+
+    return { holdingsValue: totalValue, profitLoss: totalPL };
+  }, [user.portfolio, marketData]);
+
   // Update symbol when marketData changes (e.g., on navigation)
   useEffect(() => {
     if (!marketData.find((a) => a.symbol === selectedSymbol) && marketData.length > 0) {
@@ -40,7 +58,13 @@ export default function DashboardManager({ marketData, user, children }: Dashboa
         {/* Left Column - Portfolio & Watchlist */}
         <div className="lg:col-span-3 flex flex-col gap-6">
           {/* Show PortfolioSummary only when logged in */}
-          {session && <PortfolioSummary balance={user.balance} />}
+          {session && (
+            <PortfolioSummary 
+              balance={user.balance} 
+              holdingsValue={holdingsValue}
+              profitLoss={profitLoss}
+            />
+          )}
           <AssetList 
             assets={marketData} 
             selectedSymbol={selectedSymbol}
