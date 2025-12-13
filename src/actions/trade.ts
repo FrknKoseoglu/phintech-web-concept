@@ -72,106 +72,103 @@ export async function executeTrade(
     const serverPrice = asset.price;
     const totalCost = serverPrice * quantity;
 
-    // ============ EXECUTE TRADE IN TRANSACTION ============
-    const result = await prisma.$transaction(async (tx: typeof prisma) => {
-      // Get user
-      const user = await tx.user.findUnique({
+    // ============ GET USER ============
+    const user = await prisma.user.findUnique({
+      where: { id: DEMO_USER_ID },
+      include: { portfolio: true },
+    });
+
+    if (!user) {
+      return { success: false, message: "Kullanıcı bulunamadı" };
+    }
+
+    if (type === "BUY") {
+      // -------- BUY VALIDATION --------
+      if (user.balance < totalCost) {
+        const maxQuantity = Math.floor((user.balance / serverPrice) * 10000) / 10000;
+        return {
+          success: false,
+          message: `Yetersiz bakiye. Mevcut: $${user.balance.toFixed(2)}, Gerekli: $${totalCost.toFixed(2)}. Maksimum alabileceğiniz: ${maxQuantity} ${symbol}`,
+        };
+      }
+
+      // -------- BUY EXECUTION --------
+      // Deduct balance
+      await prisma.user.update({
         where: { id: DEMO_USER_ID },
-        include: { portfolio: true },
+        data: { balance: { decrement: totalCost } },
       });
 
-      if (!user) {
-        throw new Error("Kullanıcı bulunamadı");
-      }
+      // Upsert portfolio item
+      const existingItem = user.portfolio.find((p) => p.symbol === symbol);
+      if (existingItem) {
+        // Calculate new weighted average cost
+        const totalValue = existingItem.quantity * existingItem.avgCost + totalCost;
+        const newQuantity = existingItem.quantity + quantity;
+        const newAvgCost = totalValue / newQuantity;
 
-      if (type === "BUY") {
-        // -------- BUY VALIDATION --------
-        if (user.balance < totalCost) {
-          const maxQuantity = Math.floor((user.balance / serverPrice) * 10000) / 10000;
-          throw new Error(
-            `Yetersiz bakiye. Mevcut: $${user.balance.toFixed(2)}, Gerekli: $${totalCost.toFixed(2)}. Maksimum alabileceğiniz: ${maxQuantity} ${symbol}`
-          );
-        }
-
-        // -------- BUY EXECUTION --------
-        // Deduct balance
-        await tx.user.update({
-          where: { id: DEMO_USER_ID },
-          data: { balance: { decrement: totalCost } },
+        await prisma.portfolioItem.update({
+          where: { id: existingItem.id },
+          data: {
+            quantity: newQuantity,
+            avgCost: newAvgCost,
+          },
         });
-
-        // Upsert portfolio item
-        const existingItem = user.portfolio.find((p: { symbol: string }) => p.symbol === symbol);
-        if (existingItem) {
-          // Calculate new weighted average cost
-          const totalValue = existingItem.quantity * existingItem.avgCost + totalCost;
-          const newQuantity = existingItem.quantity + quantity;
-          const newAvgCost = totalValue / newQuantity;
-
-          await tx.portfolioItem.update({
-            where: { id: existingItem.id },
-            data: {
-              quantity: newQuantity,
-              avgCost: newAvgCost,
-            },
-          });
-        } else {
-          await tx.portfolioItem.create({
-            data: {
-              userId: DEMO_USER_ID,
-              symbol,
-              quantity,
-              avgCost: serverPrice,
-            },
-          });
-        }
       } else {
-        // -------- SELL VALIDATION --------
-        const existingItem = user.portfolio.find((p: { symbol: string }) => p.symbol === symbol);
-        const ownedQuantity = existingItem?.quantity || 0;
-
-        if (ownedQuantity < quantity) {
-          throw new Error(
-            `Yetersiz varlık. Sahip olduğunuz: ${ownedQuantity.toFixed(4)} ${symbol}, Satmak istediğiniz: ${quantity}`
-          );
-        }
-
-        // -------- SELL EXECUTION --------
-        // Add to balance
-        await tx.user.update({
-          where: { id: DEMO_USER_ID },
-          data: { balance: { increment: totalCost } },
+        await prisma.portfolioItem.create({
+          data: {
+            userId: DEMO_USER_ID,
+            symbol,
+            quantity,
+            avgCost: serverPrice,
+          },
         });
+      }
+    } else {
+      // -------- SELL VALIDATION --------
+      const existingItem = user.portfolio.find((p) => p.symbol === symbol);
+      const ownedQuantity = existingItem?.quantity || 0;
 
-        // Update portfolio
-        const newQuantity = existingItem!.quantity - quantity;
-
-        if (newQuantity < 0.00001) {
-          // Remove from portfolio
-          await tx.portfolioItem.delete({
-            where: { id: existingItem!.id },
-          });
-        } else {
-          await tx.portfolioItem.update({
-            where: { id: existingItem!.id },
-            data: { quantity: newQuantity },
-          });
-        }
+      if (ownedQuantity < quantity) {
+        return {
+          success: false,
+          message: `Yetersiz varlık. Sahip olduğunuz: ${ownedQuantity.toFixed(4)} ${symbol}, Satmak istediğiniz: ${quantity}`,
+        };
       }
 
-      // ============ CREATE TRANSACTION RECORD ============
-      const transaction = await tx.transaction.create({
-        data: {
-          userId: DEMO_USER_ID,
-          type,
-          symbol,
-          quantity,
-          price: serverPrice,
-          total: totalCost,
-        },
+      // -------- SELL EXECUTION --------
+      // Add to balance
+      await prisma.user.update({
+        where: { id: DEMO_USER_ID },
+        data: { balance: { increment: totalCost } },
       });
 
-      return transaction;
+      // Update portfolio
+      const newQuantity = existingItem!.quantity - quantity;
+
+      if (newQuantity < 0.00001) {
+        // Remove from portfolio
+        await prisma.portfolioItem.delete({
+          where: { id: existingItem!.id },
+        });
+      } else {
+        await prisma.portfolioItem.update({
+          where: { id: existingItem!.id },
+          data: { quantity: newQuantity },
+        });
+      }
+    }
+
+    // ============ CREATE TRANSACTION RECORD ============
+    const transaction = await prisma.transaction.create({
+      data: {
+        userId: DEMO_USER_ID,
+        type,
+        symbol,
+        quantity,
+        price: serverPrice,
+        total: totalCost,
+      },
     });
 
     // ============ REVALIDATE CACHED PAGES ============
@@ -185,13 +182,13 @@ export async function executeTrade(
       success: true,
       message: `${quantity} ${symbol} $${serverPrice.toLocaleString("en-US", { minimumFractionDigits: 2 })} fiyatından ${actionText}. Toplam: $${totalCost.toFixed(2)}`,
       transaction: {
-        id: result.id,
-        type: result.type as "BUY" | "SELL",
-        symbol: result.symbol,
-        quantity: result.quantity,
-        price: result.price,
-        total: result.total,
-        date: result.date.toISOString(),
+        id: transaction.id,
+        type: transaction.type as "BUY" | "SELL",
+        symbol: transaction.symbol,
+        quantity: transaction.quantity,
+        price: transaction.price,
+        total: transaction.total,
+        date: transaction.date.toISOString(),
       },
     };
   } catch (error) {

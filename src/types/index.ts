@@ -43,7 +43,7 @@ export interface User {
  */
 export interface Transaction {
   id: string;
-  type: "BUY" | "SELL";
+  type: "BUY" | "SELL" | "DEPOSIT";
   symbol: string;
   quantity: number;
   price: number;
