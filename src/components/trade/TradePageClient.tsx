@@ -34,40 +34,52 @@ export default function TradePageClient({
   const isFavorite = user.favorites?.includes(selectedSymbol) || false;
 
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)] w-full max-w-[1920px] mx-auto overflow-hidden bg-white dark:bg-black">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)] w-full max-w-[1920px] mx-auto overflow-hidden bg-[#0a0a0a] p-2 gap-2">
       {/* Left Sidebar - Asset List */}
-      <AssetSidebar
-        assets={assets}
-        selectedSymbol={selectedSymbol}
-        onSelectAsset={setSelectedSymbol}
-      />
+      <div className="lg:w-72 rounded-2xl overflow-hidden border border-gray-800 bg-black">
+        <AssetSidebar
+          assets={assets}
+          selectedSymbol={selectedSymbol}
+          onSelectAsset={setSelectedSymbol}
+        />
+      </div>
 
       {/* Main Content */}
-      <section className="flex-1 flex flex-col min-w-0 bg-white dark:bg-black">
+      <section className="flex-1 flex flex-col min-w-0 gap-2">
         {/* Header */}
-        <TradeHeader asset={selectedAsset} isFavorite={isFavorite} />
+        <div className="rounded-2xl overflow-hidden border border-gray-800 bg-black">
+          <TradeHeader asset={selectedAsset} isFavorite={isFavorite} />
+        </div>
 
         {/* Chart + Right Panel */}
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        <div className="flex-1 flex flex-col md:flex-row gap-2 overflow-hidden">
           {/* Chart Section */}
-          <div className="flex-1 flex flex-col border-r border-gray-200 dark:border-gray-800">
-            <TradeChartArea asset={selectedAsset} />
-            <TradeTabs 
-              symbol={selectedSymbol}
-              transactions={transactions}
-              portfolioItem={portfolioItem}
-              currentPrice={selectedAsset.price}
-            />
+          <div className="flex-1 flex flex-col gap-2 min-w-0">
+            <div className="flex-1 min-h-[400px] rounded-2xl overflow-hidden border border-gray-800 bg-black">
+              <TradeChartArea asset={selectedAsset} />
+            </div>
+            <div className="rounded-2xl overflow-hidden border border-gray-800 bg-black">
+              <TradeTabs 
+                symbol={selectedSymbol}
+                transactions={transactions}
+                portfolioItem={portfolioItem}
+                currentPrice={selectedAsset.price}
+              />
+            </div>
           </div>
 
           {/* Right Panel - Order Book + Trade Form */}
-          <div className="w-full md:w-80 bg-white dark:bg-black flex flex-col h-full overflow-hidden">
-            <TradeOrderBook asset={selectedAsset} />
-            <TradeForm 
-              asset={selectedAsset} 
-              availableBalance={user.balance}
-              ownedQuantity={ownedQuantity}
-            />
+          <div className="w-full md:w-80 flex flex-col gap-2">
+            <div className="flex-1 rounded-2xl overflow-hidden border border-gray-800 bg-black">
+              <TradeOrderBook asset={selectedAsset} />
+            </div>
+            <div className="rounded-2xl overflow-hidden border border-gray-800 bg-black">
+              <TradeForm 
+                asset={selectedAsset} 
+                availableBalance={user.balance}
+                ownedQuantity={ownedQuantity}
+              />
+            </div>
           </div>
         </div>
       </section>

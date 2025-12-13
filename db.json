@@ -1,27 +1,33 @@
 {
   "user": {
     "id": "user_001",
-    "balance": 8540.64,
+    "balance": 4257.38,
     "portfolio": [
       {
         "symbol": "TSLA",
-        "quantity": 18.5885,
-        "avgCost": 244.87
+        "quantity": 21.2681,
+        "avgCost": 271.8435220353487
       },
       {
         "symbol": "BTC",
-        "quantity": 0.0502,
-        "avgCost": 80104.13937204125
+        "quantity": 0.0745,
+        "avgCost": 83498.1385164627
       },
       {
         "symbol": "ETH",
         "quantity": 0.3285,
         "avgCost": 2254.63
+      },
+      {
+        "symbol": "AVAX",
+        "quantity": 63.6346,
+        "avgCost": 13.421145
       }
     ],
     "favorites": [
       "AVAX",
-      "DOGE"
+      "DOGE",
+      "BTC"
     ]
   },
   "market": [
@@ -76,6 +82,33 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1765620548270",
+      "type": "BUY",
+      "symbol": "BTC",
+      "quantity": 0.0243,
+      "price": 90509.61,
+      "total": 2199.383523,
+      "date": "2025-12-13T10:09:08.270Z"
+    },
+    {
+      "id": "tx_1765619501469",
+      "type": "BUY",
+      "symbol": "TSLA",
+      "quantity": 2.6796,
+      "price": 458.96,
+      "total": 1229.829216,
+      "date": "2025-12-13T09:51:41.469Z"
+    },
+    {
+      "id": "tx_1765616328076",
+      "type": "BUY",
+      "symbol": "AVAX",
+      "quantity": 63.6346,
+      "price": 13.421145,
+      "total": 854.0491936169999,
+      "date": "2025-12-13T08:58:48.076Z"
+    },
     {
       "id": "tx_1765576512483",
       "type": "BUY",

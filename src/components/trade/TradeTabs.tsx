@@ -32,24 +32,21 @@ export default function TradeTabs({ symbol, transactions, portfolioItem, current
   const holdingPnLPercent = holdingCost > 0 ? (holdingPnL / holdingCost) * 100 : 0;
 
   return (
-    <div className="h-64 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-black flex flex-col">
-      {/* Tabs */}
-      <div className="flex items-center px-4 border-b border-gray-200 dark:border-gray-800">
+    <div className="h-64 bg-black flex flex-col">
+      {/* Tabs - Rounded Pill Style */}
+      <div className="flex items-center gap-1 px-4 py-2 border-b border-gray-800">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "px-4 py-3 text-sm font-medium transition-colors relative",
+              "px-4 py-2 text-sm font-medium transition-all rounded-full",
               activeTab === tab.id
-                ? "text-primary"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                ? "bg-primary/15 text-primary"
+                : "text-gray-400 hover:text-white hover:bg-gray-800"
             )}
           >
             {tab.label}
-            {activeTab === tab.id && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-            )}
           </button>
         ))}
       </div>
@@ -58,15 +55,15 @@ export default function TradeTabs({ symbol, transactions, portfolioItem, current
       <div className="flex-1 overflow-auto p-4">
         {activeTab === "orders" && (
           <div className="h-full flex flex-col items-center justify-center text-center">
-            <div className="text-gray-400 dark:text-gray-500 mb-2">
+            <div className="text-gray-500 mb-2">
               <svg className="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-gray-400">
               Açık emiriniz bulunmuyor.
             </p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               Piyasa emirleri anlık olarak gerçekleştirilir.
             </p>
           </div>
@@ -76,7 +73,7 @@ export default function TradeTabs({ symbol, transactions, portfolioItem, current
           <div>
             {symbolTransactions.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-8">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-gray-400">
                   {symbol} için işlem geçmişi bulunmuyor.
                 </p>
               </div>
@@ -126,15 +123,15 @@ export default function TradeTabs({ symbol, transactions, portfolioItem, current
           <div>
             {holdingQuantity <= 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-8">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-gray-400">
                   {symbol} varlığınız bulunmuyor.
                 </p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mt-1">
                   Sağ panelden alım yapabilirsiniz.
                 </p>
               </div>
             ) : (
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800">
+              <div className="bg-[#1C1C1E] rounded-2xl p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h4 className="font-bold text-gray-900 dark:text-white">{symbol}</h4>
@@ -150,16 +147,16 @@ export default function TradeTabs({ symbol, transactions, portfolioItem, current
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+                <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-700">
                   <div>
                     <p className="text-xs text-gray-500 mb-1">Ort. Maliyet</p>
-                    <p className="font-semibold text-gray-900 dark:text-white">
+                    <p className="font-semibold text-white">
                       ${holdingAvgCost.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 mb-1">Mevcut Fiyat</p>
-                    <p className="font-semibold text-gray-900 dark:text-white">
+                    <p className="font-semibold text-white">
                       ${currentPrice.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                     </p>
                   </div>

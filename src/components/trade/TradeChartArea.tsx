@@ -81,20 +81,20 @@ export default function TradeChartArea({ asset }: TradeChartAreaProps) {
   const chartColor = isPositive ? "#05C46B" : "#FF3B30";
 
   return (
-    <div className="flex-1 flex flex-col relative bg-white dark:bg-black">
+    <div className="h-full flex flex-col relative bg-black">
       {/* Toolbar */}
-      <div className="h-10 border-b border-gray-200 dark:border-gray-800 flex items-center px-4 gap-4 bg-white dark:bg-black">
-        {/* Time Range */}
-        <div className="flex gap-1 bg-gray-100 dark:bg-[#1C1C1E] p-0.5 rounded-lg">
+      <div className="h-12 border-b border-gray-800 flex items-center px-4 gap-4 bg-black">
+        {/* Time Range - Pill Style */}
+        <div className="flex gap-1 bg-[#1C1C1E] p-1 rounded-full">
           {timeRanges.map((range) => (
             <button
               key={range.value}
               onClick={() => setActiveRange(range.value)}
               className={cn(
-                "text-xs font-medium px-3 py-1 rounded transition-colors",
+                "text-xs font-medium px-4 py-1.5 rounded-full transition-all",
                 activeRange === range.value
-                  ? "bg-white dark:bg-[#2C2C2E] text-primary shadow-sm"
-                  : "text-gray-500 hover:text-primary"
+                  ? "bg-primary text-white shadow-lg"
+                  : "text-gray-400 hover:text-white"
               )}
             >
               {range.label}
@@ -102,15 +102,15 @@ export default function TradeChartArea({ asset }: TradeChartAreaProps) {
           ))}
         </div>
 
-        <div className="h-4 w-px bg-gray-300 dark:bg-gray-700" />
+        <div className="h-5 w-px bg-gray-700" />
 
         {/* Chart Type */}
-        <div className="flex gap-1">
+        <div className="flex gap-1 bg-[#1C1C1E] p-1 rounded-xl">
           <button 
             onClick={() => setChartType("line")}
             className={cn(
-              "p-1.5 rounded transition-colors",
-              chartType === "line" ? "text-primary bg-primary/10" : "text-gray-500 hover:text-primary"
+              "p-2 rounded-lg transition-all",
+              chartType === "line" ? "text-primary bg-primary/15" : "text-gray-400 hover:text-white"
             )}
           >
             <LineChart className="w-4 h-4" />
@@ -118,8 +118,8 @@ export default function TradeChartArea({ asset }: TradeChartAreaProps) {
           <button 
             onClick={() => setChartType("candle")}
             className={cn(
-              "p-1.5 rounded transition-colors",
-              chartType === "candle" ? "text-primary bg-primary/10" : "text-gray-500 hover:text-primary"
+              "p-2 rounded-lg transition-all",
+              chartType === "candle" ? "text-primary bg-primary/15" : "text-gray-400 hover:text-white"
             )}
           >
             <CandlestickChart className="w-4 h-4" />
@@ -190,7 +190,7 @@ export default function TradeChartArea({ asset }: TradeChartAreaProps) {
         {/* Current Price Indicator */}
         <div
           className={cn(
-            "absolute right-0 top-[25%] text-white text-xs px-2 py-1 rounded-l shadow-lg font-bold",
+            "absolute right-0 top-[25%] text-white text-xs px-3 py-1.5 rounded-l-xl shadow-lg font-bold",
             isPositive ? "bg-success" : "bg-danger"
           )}
         >
