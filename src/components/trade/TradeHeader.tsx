@@ -55,12 +55,12 @@ export default function TradeHeader({ asset, isFavorite: initialFavorite = false
   };
 
   return (
-    <div className="h-16 px-6 flex items-center justify-between bg-black">
+    <div className="h-16 px-6 flex items-center justify-between bg-white dark:bg-black">
       <div className="flex items-center gap-4">
         {/* Asset Info */}
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-white">
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
               {asset.symbol}/USD
             </h1>
             <span className="bg-primary/15 text-primary text-xs px-2.5 py-1 rounded-full font-medium">
@@ -72,7 +72,7 @@ export default function TradeHeader({ asset, isFavorite: initialFavorite = false
           </span>
         </div>
 
-        <div className="h-8 w-px bg-gray-800 mx-2" />
+        <div className="h-8 w-px bg-gray-200 dark:bg-gray-800 mx-2" />
 
         {/* Price */}
         <div className="flex flex-col">
@@ -90,7 +90,7 @@ export default function TradeHeader({ asset, isFavorite: initialFavorite = false
             <span className="text-[10px] text-gray-500 uppercase font-medium">
               24s Hacim ({asset.symbol})
             </span>
-            <span className="text-sm font-semibold text-gray-200">
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
               {stats.volume24h}
             </span>
           </div>
@@ -98,7 +98,7 @@ export default function TradeHeader({ asset, isFavorite: initialFavorite = false
             <span className="text-[10px] text-gray-500 uppercase font-medium">
               24s Hacim (USD)
             </span>
-            <span className="text-sm font-semibold text-gray-200">
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
               {stats.volumeUSD}
             </span>
           </div>
@@ -106,7 +106,7 @@ export default function TradeHeader({ asset, isFavorite: initialFavorite = false
             <span className="text-[10px] text-gray-500 uppercase font-medium">
               24s En Yüksek
             </span>
-            <span className="text-sm font-semibold text-gray-200">
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
               {stats.high24h}
             </span>
           </div>
@@ -114,7 +114,7 @@ export default function TradeHeader({ asset, isFavorite: initialFavorite = false
             <span className="text-[10px] text-gray-500 uppercase font-medium">
               24s En Düşük
             </span>
-            <span className="text-sm font-semibold text-gray-200">
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
               {stats.low24h}
             </span>
           </div>
@@ -130,12 +130,12 @@ export default function TradeHeader({ asset, isFavorite: initialFavorite = false
             "p-2.5 rounded-xl transition-all",
             isFavorite 
               ? "text-yellow-500 bg-yellow-500/15 hover:bg-yellow-500/25" 
-              : "text-gray-400 hover:bg-gray-800"
+              : "text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
           )}
         >
           <Star className={cn("w-5 h-5", isFavorite && "fill-current")} />
         </button>
-        <button className="p-2.5 hover:bg-gray-800 rounded-xl text-gray-400 transition-all">
+        <button className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl text-gray-400 transition-all">
           <Share2 className="w-5 h-5" />
         </button>
       </div>

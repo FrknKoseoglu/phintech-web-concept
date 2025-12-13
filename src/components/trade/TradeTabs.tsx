@@ -32,9 +32,9 @@ export default function TradeTabs({ symbol, transactions, portfolioItem, current
   const holdingPnLPercent = holdingCost > 0 ? (holdingPnL / holdingCost) * 100 : 0;
 
   return (
-    <div className="h-64 bg-black flex flex-col">
+    <div className="h-64 bg-white dark:bg-black flex flex-col">
       {/* Tabs - Rounded Pill Style */}
-      <div className="flex items-center gap-1 px-4 py-2 border-b border-gray-800">
+      <div className="flex items-center gap-1 px-4 py-2 border-b border-gray-200 dark:border-gray-800">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -43,7 +43,7 @@ export default function TradeTabs({ symbol, transactions, portfolioItem, current
               "px-4 py-2 text-sm font-medium transition-all rounded-full",
               activeTab === tab.id
                 ? "bg-primary/15 text-primary"
-                : "text-gray-400 hover:text-white hover:bg-gray-800"
+                : "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
             )}
           >
             {tab.label}

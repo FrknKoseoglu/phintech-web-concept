@@ -88,9 +88,9 @@ export default function AssetSidebar({
   }, [assets, searchQuery, activeTab]);
 
   return (
-    <aside className="w-full bg-black flex flex-col h-full overflow-hidden">
+    <aside className="w-full bg-white dark:bg-black flex flex-col h-full overflow-hidden">
       {/* Search */}
-      <div className="p-4 border-b border-gray-800">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-800">
         <div className="relative">
           <Search className="absolute left-4 top-3 text-gray-400 w-4 h-4" />
           <input
@@ -98,12 +98,12 @@ export default function AssetSidebar({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Sembol ara (AAPL, BTC)..."
-            className="w-full bg-[#1C1C1E] border border-gray-700 rounded-2xl py-2.5 pl-11 pr-4 text-sm focus:ring-2 focus:ring-primary focus:border-primary text-white placeholder-gray-500 transition-all"
+            className="w-full bg-gray-100 dark:bg-[#1C1C1E] border border-gray-300 dark:border-gray-700 rounded-2xl py-2.5 pl-11 pr-4 text-sm focus:ring-2 focus:ring-primary focus:border-primary text-gray-900 dark:text-white placeholder-gray-500 transition-all"
           />
         </div>
 
         {/* Category Tabs - Pill Segmented Control */}
-        <div className="flex gap-1 mt-4 bg-[#1C1C1E] p-1 rounded-full">
+        <div className="flex gap-1 mt-4 bg-gray-100 dark:bg-[#1C1C1E] p-1 rounded-full">
           {categoryTabs.map((tab) => (
             <button
               key={tab.id}
@@ -112,7 +112,7 @@ export default function AssetSidebar({
                 "flex-1 px-3 py-1.5 text-xs font-semibold rounded-full transition-all",
                 activeTab === tab.id
                   ? "bg-primary text-white shadow-lg"
-                  : "text-gray-400 hover:text-white"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
               )}
             >
               {tab.label}
@@ -141,7 +141,7 @@ export default function AssetSidebar({
                     "p-3 cursor-pointer group transition-all rounded-xl",
                     isSelected
                       ? "bg-primary/15 ring-1 ring-primary/30"
-                      : "hover:bg-[#1C1C1E]"
+                      : "hover:bg-gray-100 dark:hover:bg-[#1C1C1E]"
                   )}
                 >
                   <div className="flex justify-between items-start mb-1">

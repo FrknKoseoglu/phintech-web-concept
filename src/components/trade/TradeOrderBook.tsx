@@ -47,7 +47,12 @@ export default function TradeOrderBook({ asset }: TradeOrderBookProps) {
   const spreadPercent = (spread / asset.price) * 100;
 
   return (
-    <div className="h-full flex flex-col bg-black">
+    <div className="h-full flex flex-col bg-white dark:bg-black">
+      {/* Header */}
+      <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-800">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Emir Defteri</h3>
+      </div>
+
       {/* ASKS (Sells) - Top Section */}
       <div className="flex-1 overflow-hidden relative flex flex-col justify-end">
         <div className="overflow-y-auto">
@@ -56,18 +61,18 @@ export default function TradeOrderBook({ asset }: TradeOrderBookProps) {
             return (
               <div
                 key={`ask-${i}`}
-                className="grid grid-cols-3 px-3 py-0.5 text-[11px] hover:bg-gray-800/30 cursor-pointer relative group"
+                className="grid grid-cols-3 px-3 py-0.5 text-[11px] hover:bg-gray-100 dark:hover:bg-gray-800/30 cursor-pointer relative group"
                 title={isFirstAsk ? `Makas: ${spreadPercent.toFixed(3)}%` : undefined}
               >
                 <span className="text-danger font-medium z-10">
                   {order.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
-                <span className="text-right text-gray-400 z-10">
+                <span className="text-right text-gray-500 dark:text-gray-400 z-10">
                   {order.amount.toFixed(4)}
                 </span>
-                <span className="text-right text-gray-500 z-10">{order.total}K</span>
+                <span className="text-right text-gray-400 dark:text-gray-500 z-10">{order.total}K</span>
                 <div
-                  className="absolute top-0 right-0 h-full bg-danger/8"
+                  className="absolute top-0 right-0 h-full bg-danger/10 dark:bg-danger/8"
                   style={{ width: `${((order.amount / maxAmount) * 100).toFixed(2)}%` }}
                 />
               </div>
@@ -77,7 +82,7 @@ export default function TradeOrderBook({ asset }: TradeOrderBookProps) {
       </div>
 
       {/* Center - Column Headers Only */}
-      <div className="py-1.5 px-3 border-y border-gray-800 bg-[#0d0d0d]">
+      <div className="py-1.5 px-3 border-y border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#0d0d0d]">
         <div className="grid grid-cols-3 text-[9px] uppercase text-gray-500 font-medium">
           <div>Fiyat</div>
           <div className="text-right">Miktar</div>
@@ -93,18 +98,18 @@ export default function TradeOrderBook({ asset }: TradeOrderBookProps) {
             return (
               <div
                 key={`bid-${i}`}
-                className="grid grid-cols-3 px-3 py-0.5 text-[11px] hover:bg-gray-800/30 cursor-pointer relative group"
+                className="grid grid-cols-3 px-3 py-0.5 text-[11px] hover:bg-gray-100 dark:hover:bg-gray-800/30 cursor-pointer relative group"
                 title={isFirstBid ? `Makas: ${spreadPercent.toFixed(3)}%` : undefined}
               >
                 <span className="text-success font-medium z-10">
                   {order.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
-                <span className="text-right text-gray-400 z-10">
+                <span className="text-right text-gray-500 dark:text-gray-400 z-10">
                   {order.amount.toFixed(4)}
                 </span>
-                <span className="text-right text-gray-500 z-10">{order.total}K</span>
+                <span className="text-right text-gray-400 dark:text-gray-500 z-10">{order.total}K</span>
                 <div
-                  className="absolute top-0 right-0 h-full bg-success/8"
+                  className="absolute top-0 right-0 h-full bg-success/10 dark:bg-success/8"
                   style={{ width: `${((order.amount / maxAmount) * 100).toFixed(2)}%` }}
                 />
               </div>

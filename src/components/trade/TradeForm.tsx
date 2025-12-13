@@ -104,9 +104,9 @@ export default function TradeForm({
   };
 
   return (
-    <div className="p-4 bg-black">
+    <div className="p-4 bg-white dark:bg-black">
       {/* Buy/Sell Toggle - Pill Segmented Control */}
-      <div className="flex gap-1 mb-4 bg-[#1C1C1E] p-1 rounded-full">
+      <div className="flex gap-1 mb-4 bg-gray-100 dark:bg-[#1C1C1E] p-1 rounded-full">
         <button
           onClick={() => { setIsBuy(true); resetForm(); }}
           disabled={isPending}
@@ -134,10 +134,10 @@ export default function TradeForm({
       </div>
 
       {/* Current Market Price (Read-Only) */}
-      <div className="mb-4 p-3 bg-[#1C1C1E] rounded-2xl">
+      <div className="mb-4 p-3 bg-gray-100 dark:bg-[#1C1C1E] rounded-2xl">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Piyasa Fiyatı</span>
-          <span className="text-sm font-bold text-white">
+          <span className="text-xs text-gray-500 dark:text-gray-400">Piyasa Fiyatı</span>
+          <span className="text-sm font-bold text-gray-900 dark:text-white">
             ${asset.price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </span>
         </div>
@@ -159,7 +159,7 @@ export default function TradeForm({
             }}
             placeholder="0.00"
             disabled={isPending}
-            className="w-full bg-[#1C1C1E] border border-gray-700 rounded-2xl py-3 pl-4 pr-14 text-sm font-medium focus:ring-2 focus:ring-primary focus:border-primary text-white transition-all disabled:opacity-50"
+            className="w-full bg-gray-100 dark:bg-[#1C1C1E] border border-gray-300 dark:border-gray-700 rounded-2xl py-3 pl-4 pr-14 text-sm font-medium focus:ring-2 focus:ring-primary focus:border-primary text-gray-900 dark:text-white transition-all disabled:opacity-50"
           />
           <span className="absolute right-4 top-3.5 text-xs text-gray-400 font-medium">
             {asset.symbol}
@@ -180,7 +180,7 @@ export default function TradeForm({
 
       {/* Slider */}
       <div className="mb-6 px-1">
-        <div className="h-2 bg-[#1C1C1E] rounded-full relative cursor-pointer">
+        <div className="h-2 bg-gray-200 dark:bg-[#1C1C1E] rounded-full relative cursor-pointer">
           <div
             className={cn("absolute left-0 top-0 h-full rounded-full transition-all", isBuy ? "bg-success" : "bg-danger")}
             style={{ width: `${sliderValue}%` }}
@@ -218,7 +218,7 @@ export default function TradeForm({
       {/* Available Balance / Owned */}
       <div className="flex justify-between text-xs mb-3 text-gray-400">
         <span>{isBuy ? "Kullanılabilir Bakiye" : "Sahip Olduğunuz"}</span>
-        <span className="font-medium text-gray-200">
+        <span className="font-medium text-gray-700 dark:text-gray-200">
           {isBuy 
             ? `$${availableBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
             : `${ownedQuantity.toFixed(4)} ${asset.symbol}`
@@ -227,9 +227,9 @@ export default function TradeForm({
       </div>
 
       {/* Estimated Total */}
-      <div className="flex justify-between text-sm mb-4 py-3 border-y border-gray-800">
-        <span className="text-gray-400">Tahmini Toplam</span>
-        <span className="font-bold text-lg text-white">
+      <div className="flex justify-between text-sm mb-4 py-3 border-y border-gray-200 dark:border-gray-800">
+        <span className="text-gray-500 dark:text-gray-400">Tahmini Toplam</span>
+        <span className="font-bold text-lg text-gray-900 dark:text-white">
           ${estimatedTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </span>
       </div>
