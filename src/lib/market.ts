@@ -149,8 +149,9 @@ export async function getAssetBySymbol(symbol: string): Promise<Asset | undefine
 // Legacy exports
 export { SEED_ASSETS };
 
-export function getMarketDataSnapshot(): Asset[] {
-  return SEED_ASSETS;
+// Get live market data snapshot (async version)
+export async function getMarketDataSnapshot(): Promise<Asset[]> {
+  return await getMarketData();
 }
 
 export function resetMarketPrices(): void {

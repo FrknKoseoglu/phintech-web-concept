@@ -23,14 +23,12 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
   const params = await searchParams;
   const categoryFilter = params.category as AssetCategory | undefined;
 
-  // Fetch user data and transactions
-  const [user, transactions] = await Promise.all([
+  // Fetch user data, transactions and live market data
+  const [user, transactions, marketData] = await Promise.all([
     fetchUser(),
     fetchTransactions(),
+    getMarketDataSnapshot(),
   ]);
-  
-  // Get market data snapshot (no price mutation)
-  const marketData = getMarketDataSnapshot();
 
   // Build holdings with calculated values
   const allHoldings: PortfolioHolding[] = user.portfolio
@@ -290,11 +288,17 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
                           ${holding.currentValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <Link href={`/trade?symbol=${holding.symbol}`} className="text-primary hover:text-primary-dark font-medium text-xs">
+                          <Link 
+                            href={`/trade?symbol=${holding.symbol}`} 
+                            className="text-success hover:text-green-400 font-medium text-xs transition-colors"
+                          >
                             Al
                           </Link>
-                          <span className="mx-1 text-gray-300">|</span>
-                          <Link href={`/trade?symbol=${holding.symbol}`} className="text-primary hover:text-primary-dark font-medium text-xs">
+                          <span className="mx-2 text-gray-600">|</span>
+                          <Link 
+                            href={`/trade?symbol=${holding.symbol}`} 
+                            className="text-danger hover:text-red-400 font-medium text-xs transition-colors"
+                          >
                             Sat
                           </Link>
                         </td>

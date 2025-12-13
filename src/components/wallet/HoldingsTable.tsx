@@ -193,9 +193,13 @@ export default function HoldingsTable({ holdings, cashBalance }: HoldingsTablePr
                     ${holding.currentValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="text-primary hover:text-primary-dark font-medium text-xs">Al</button>
-                    <span className="mx-1 text-gray-300">|</span>
-                    <button className="text-primary hover:text-primary-dark font-medium text-xs">Sat</button>
+                    <button className="text-success hover:text-green-400 font-medium text-xs transition-colors">
+                      Al
+                    </button>
+                    <span className="mx-2 text-gray-600">|</span>
+                    <button className="text-danger hover:text-red-400 font-medium text-xs transition-colors">
+                      Sat
+                    </button>
                   </td>
                 </tr>
               );
