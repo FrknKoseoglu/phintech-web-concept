@@ -10,6 +10,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import RecentTransactions from "@/components/wallet/RecentTransactions";
 import WalletSidebar from "@/components/wallet/WalletSidebar";
+import DemoButton from "@/components/ui/DemoButton";
 
 export const dynamic = "force-dynamic";
 
@@ -143,14 +144,20 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
               </p>
             </div>
             <div className="flex gap-3">
-              <button className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-md shadow-primary/20">
+              <DemoButton 
+                featureName="Para yatırma"
+                className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-md shadow-primary/20"
+              >
                 <ArrowDownToLine className="w-4 h-4" />
                 Para Yatır
-              </button>
-              <button className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">
+              </DemoButton>
+              <DemoButton 
+                featureName="Para çekme"
+                className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              >
                 <ArrowUpFromLine className="w-4 h-4" />
                 Çek
-              </button>
+              </DemoButton>
             </div>
           </div>
 
@@ -257,10 +264,8 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
                         <td className="px-6 py-4 text-right text-gray-900 dark:text-white font-bold">
                           ${tryInUsd.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                         </td>
-                        <td className="px-6 py-4 text-right">
-                          <Link href="/trade?symbol=USD&mode=buy" className="text-primary hover:text-primary-dark font-medium text-xs">USD Al</Link>
-                          <span className="mx-1 text-gray-300">|</span>
-                          <Link href="/trade?symbol=USDT&mode=buy" className="text-primary hover:text-primary-dark font-medium text-xs">USDT Al</Link>
+                        <td className="px-6 py-4 text-right text-gray-400">
+                          —
                         </td>
                       </tr>
 

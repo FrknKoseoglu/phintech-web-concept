@@ -62,6 +62,7 @@ export default function RootLayout({
               position="top-right" 
               richColors
               theme="dark"
+              offset="80px"
               toastOptions={{
                 style: {
                   background: '#1C1C1E',

@@ -1,4 +1,7 @@
+"use client";
+
 import { TrendingUp, TrendingDown, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
+import { toast } from "sonner";
 import MoneyDisplay from "@/components/ui/MoneyDisplay";
 import { formatMoney } from "@/lib/utils";
 
@@ -17,6 +20,10 @@ export default function PortfolioSummary({
   const costBasis = holdingsValue - profitLoss;
   const changePercent = costBasis > 0 ? (profitLoss / costBasis) * 100 : 0;
   const isPositive = profitLoss >= 0;
+
+  const handleDemoFeature = (feature: string) => {
+    toast.info(`${feature} özelliği Konsept Projede mevcut değildir`);
+  };
 
   return (
     <div className="bg-white dark:bg-black rounded-2xl p-5 border border-gray-200 dark:border-gray-800">
@@ -54,11 +61,17 @@ export default function PortfolioSummary({
       )}
 
       <div className="mt-5 grid grid-cols-2 gap-3">
-        <button className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white py-3 rounded-full text-sm font-semibold transition-all">
+        <button 
+          onClick={() => handleDemoFeature('Para yatırma')}
+          className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white py-3 rounded-full text-sm font-semibold transition-all"
+        >
           <ArrowDownToLine className="w-4 h-4" />
           Yatır
         </button>
-        <button className="flex items-center justify-center gap-2 bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-800 dark:text-white py-3 rounded-full text-sm font-semibold transition-all border border-transparent dark:border-gray-800">
+        <button 
+          onClick={() => handleDemoFeature('Para çekme')}
+          className="flex items-center justify-center gap-2 bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-800 dark:text-white py-3 rounded-full text-sm font-semibold transition-all border border-transparent dark:border-gray-800"
+        >
           <ArrowUpFromLine className="w-4 h-4" />
           Çek
         </button>

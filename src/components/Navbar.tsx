@@ -17,13 +17,13 @@ import {
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/ThemeProvider";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const navLinks = [
   { href: "/", label: "Panel" },
-  // { href: "/markets", label: "Piyasalar" }, // Şimdilik gizli
   { href: "/trade", label: "Al-Sat" },
   { href: "/wallet", label: "Portföy" },
-  // { href: "/analysis", label: "Analiz" }, // Şimdilik gizli
+  { href: "/analysis", label: "Analiz" },
   { href: "/news", label: "Haberler" },
 ];
 
@@ -129,7 +129,10 @@ export default function Navbar() {
           </div>
 
           {/* Help Button */}
-          <button className="p-2 rounded-full hover:bg-[#1C1C1E] text-text-muted hover:text-white transition-colors hidden sm:block">
+          <button 
+            onClick={() => toast.info('Yardım özelliği Konsept Projede mevcut değildir')}
+            className="p-2 rounded-full hover:bg-[#1C1C1E] text-text-muted hover:text-white transition-colors hidden sm:block"
+          >
             <HelpCircle className="w-5 h-5" />
           </button>
 
@@ -143,7 +146,10 @@ export default function Navbar() {
           </button>
 
           {/* Notifications */}
-          <button className="p-2 rounded-full hover:bg-[#1C1C1E] text-text-muted hover:text-white transition-colors relative">
+          <button 
+            onClick={() => toast.info('Bildirimler özelliği Konsept Projede mevcut değildir')}
+            className="p-2 rounded-full hover:bg-[#1C1C1E] text-text-muted hover:text-white transition-colors relative"
+          >
             <Bell className="w-5 h-5" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full ring-2 ring-black" />
           </button>
