@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Asset } from "@/types";
-import { cn } from "@/lib/utils";
+import { cn, getHoldingUnit } from "@/lib/utils";
 import { executeTrade } from "@/actions/trade";
 
 interface TradeFormProps {
@@ -146,7 +146,7 @@ export default function TradeForm({
       {/* Quantity Input */}
       <div className="mb-4">
         <label className="block text-xs text-gray-400 mb-1.5">
-          Miktar ({asset.symbol})
+          Miktar ({getHoldingUnit(asset.symbol)})
         </label>
         <div className="relative">
           <input
@@ -162,7 +162,7 @@ export default function TradeForm({
             className="w-full bg-gray-100 dark:bg-[#1C1C1E] border border-gray-300 dark:border-gray-700 rounded-2xl py-3 pl-4 pr-14 text-sm font-medium focus:ring-2 focus:ring-primary focus:border-primary text-gray-900 dark:text-white transition-all disabled:opacity-50"
           />
           <span className="absolute right-4 top-3.5 text-xs text-gray-400 font-medium">
-            {asset.symbol}
+            {getHoldingUnit(asset.symbol)}
           </span>
         </div>
         <div className="flex justify-between mt-1 text-xs text-gray-400">
@@ -171,7 +171,7 @@ export default function TradeForm({
               onClick={() => { setQuantity(maxQuantity.toFixed(4)); setSliderValue(100); }}
               className="text-primary hover:underline"
             >
-              {maxQuantity.toFixed(4)} {asset.symbol}
+              {maxQuantity.toFixed(4)} {getHoldingUnit(asset.symbol)}
             </button>
           </span>
           {!isBuy && <span>Sahip: {ownedQuantity.toFixed(4)}</span>}
@@ -221,7 +221,7 @@ export default function TradeForm({
         <span className="font-medium text-gray-700 dark:text-gray-200">
           {isBuy 
             ? `$${availableBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
-            : `${ownedQuantity.toFixed(4)} ${asset.symbol}`
+            : `${ownedQuantity.toFixed(4)} ${getHoldingUnit(asset.symbol)}`
           }
         </span>
       </div>
@@ -237,12 +237,12 @@ export default function TradeForm({
       {/* Validation Warnings */}
       {isBuy && estimatedTotal > availableBalance && estimatedTotal > 0 && (
         <div className="mb-3 text-xs text-danger bg-danger/10 px-4 py-2.5 rounded-xl">
-          Yetersiz bakiye. Maksimum alım: {maxQuantity.toFixed(4)} {asset.symbol}
+          Yetersiz bakiye. Maksimum alım: {maxQuantity.toFixed(4)} {getHoldingUnit(asset.symbol)}
         </div>
       )}
       {!isBuy && parseFloat(quantity) > ownedQuantity && parseFloat(quantity) > 0 && (
         <div className="mb-3 text-xs text-danger bg-danger/10 px-4 py-2.5 rounded-xl">
-          Yetersiz varlık. Sahip olduğunuz: {ownedQuantity.toFixed(4)} {asset.symbol}
+          Yetersiz varlık. Sahip olduğunuz: {ownedQuantity.toFixed(4)} {getHoldingUnit(asset.symbol)}
         </div>
       )}
 
@@ -264,7 +264,7 @@ export default function TradeForm({
           </>
         ) : (
           <>
-            {asset.symbol} {isBuy ? "Satın Al" : "Sat"}
+            {getHoldingUnit(asset.symbol)} {isBuy ? "Satın Al" : "Sat"}
           </>
         )}
       </button>

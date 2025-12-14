@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Transaction, PortfolioItem } from "@/types";
-import { cn } from "@/lib/utils";
+import { cn, getHoldingUnit } from "@/lib/utils";
 
 interface TradeTabsProps {
   symbol: string;
@@ -139,7 +139,7 @@ export default function TradeTabs({ symbol, transactions, portfolioItem, current
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-bold text-gray-900 dark:text-white">
-                      {holdingQuantity.toFixed(4)} {symbol}
+                      {holdingQuantity.toFixed(4)} {getHoldingUnit(symbol)}
                     </p>
                     <p className="text-sm text-gray-500">
                       ≈ ${holdingValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}

@@ -7,16 +7,47 @@ import { toast } from "sonner";
 import { executeTrade } from "@/actions/trade";
 import type { Asset } from "@/types";
 import { Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getHoldingUnit } from "@/lib/utils";
 
 interface QuickTradeProps {
   selectedAsset?: Asset;
-  availableBalance: number;
+  tryBalance: number;      // user.balance (TL)
+  usdBalance: number;      // portfolio['USD']
+  usdtBalance: number;     // portfolio['USDT']
+  ownedQuantity?: number;
+}
+
+// BIST stock symbols (for client-side funding source check)
+const BIST_SYMBOLS = ['THYAO', 'GARAN', 'AKBNK', 'EREGL', 'SASA'];
+
+// Determine funding source for an asset
+type FundingSource = 'TRY' | 'USD' | 'USDT';
+
+function getFundingSource(asset: Asset): FundingSource {
+  if (asset.category === 'currency') return 'TRY';
+  if (BIST_SYMBOLS.includes(asset.symbol)) return 'TRY';
+  if (asset.category === 'commodity') return 'TRY';
+  if (asset.category === 'crypto') return 'USDT';
+  return 'USD';
+}
+
+// Get available balance for display based on asset type
+function getAvailableBalanceInfo(asset: Asset, tryBalance: number, usdBalance: number, usdtBalance: number): { amount: number; label: string; symbol: string } {
+  const source = getFundingSource(asset);
+  if (source === 'USDT') {
+    return { amount: usdtBalance, label: 'Kullanılabilir', symbol: 'USDT' };
+  } else if (source === 'USD') {
+    return { amount: usdBalance, label: 'Kullanılabilir', symbol: '$' };
+  }
+  return { amount: tryBalance, label: 'Kullanılabilir', symbol: '₺' };
 }
 
 export default function QuickTrade({
   selectedAsset,
-  availableBalance,
+  tryBalance,
+  usdBalance,
+  usdtBalance,
+  ownedQuantity = 0,
 }: QuickTradeProps) {
   const { data: session } = useSession();
   const router = useRouter();
@@ -63,6 +94,12 @@ export default function QuickTrade({
       return;
     }
 
+    // Validate sell quantity
+    if (!isBuy && qty > ownedQuantity) {
+      toast.error(`Yetersiz varlık. Sahip olduğunuz: ${ownedQuantity.toFixed(4)} ${getHoldingUnit(symbol)}`);
+      return;
+    }
+
     startTransition(async () => {
       const result = await executeTrade(symbol.toUpperCase(), qty, mode);
       if (result.success) {
@@ -78,12 +115,19 @@ export default function QuickTrade({
   // Calculate quantity based on slider percentage
   const handleSliderChange = (value: number) => {
     setSliderValue(value);
+    // Get available balance based on funding source
+    const balanceInfo = selectedAsset ? getAvailableBalanceInfo(selectedAsset, tryBalance, usdBalance, usdtBalance) : { amount: 0, label: '', symbol: '' };
+    
     if (isBuy && estimatedPrice > 0) {
-      const maxQuantity = availableBalance / estimatedPrice;
+      // For BUY, calculate max quantity based on available funds
+      const maxQuantity = balanceInfo.amount / estimatedPrice;
       const newQuantity = (maxQuantity * value) / 100;
       setQuantity(newQuantity.toFixed(4));
+    } else if (!isBuy && ownedQuantity > 0) {
+      // SELL mode: calculate based on owned quantity
+      const newQuantity = (ownedQuantity * value) / 100;
+      setQuantity(newQuantity.toFixed(4));
     }
-    // TODO: For SELL mode, calculate based on owned quantity
   };
 
   return (
@@ -116,13 +160,36 @@ export default function QuickTrade({
         </button>
       </div>
 
-      {/* Available Balance */}
+      {/* Available Balance / Owned Quantity */}
       <div className="flex justify-between text-xs text-gray-500 mb-2">
         <span>
-          Kullanılabilir:{" "}
-          <span className="text-gray-800 dark:text-gray-200 font-medium">
-            ${availableBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-          </span>
+          {isBuy ? (
+            <>
+              {selectedAsset && (() => {
+                const info = getAvailableBalanceInfo(selectedAsset, tryBalance, usdBalance, usdtBalance);
+                return (
+                  <>
+                    {info.label}:{" "}
+                    <span className="text-gray-800 dark:text-gray-200 font-medium">
+                      {info.symbol === 'USDT' 
+                        ? `${info.amount.toFixed(2)} USDT`
+                        : info.symbol === '$'
+                          ? `$${info.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+                          : `₺${info.amount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`
+                      }
+                    </span>
+                  </>
+                );
+              })()}
+            </>
+          ) : (
+            <>
+              Sahip olduğunuz:{" "}
+              <span className="text-gray-800 dark:text-gray-200 font-medium">
+                {ownedQuantity.toFixed(4)} {symbol}
+              </span>
+            </>
+          )}
         </span>
         <a href="#" className="text-primary hover:underline">
           Limit
@@ -205,9 +272,27 @@ export default function QuickTrade({
         <div className="flex justify-between items-center py-3 border-t border-gray-100 dark:border-gray-800">
           <span className="text-sm text-gray-500">Tahmini Toplam</span>
           <span className="text-lg font-bold text-gray-900 dark:text-white">
-            ${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {symbol === 'USDTRY' 
+              ? new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(total)
+              : selectedAsset?.currency === 'TRY' 
+                ? new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(total)
+                : `$${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           </span>
         </div>
+
+        {/* TRY Conversion Info */}
+        {symbol === 'USDTRY' && total > 0 && (
+          <div className="text-xs text-center text-gray-500 py-2 bg-gray-50 dark:bg-gray-900 rounded-lg mb-3">
+            {parseFloat(quantity || '0').toFixed(2)} USD = {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(total)}
+          </div>
+        )}
+        {selectedAsset?.currency === 'TRY' && symbol !== 'USDTRY' && total > 0 && (
+          <div className="text-xs text-center text-gray-500 py-2 bg-gray-50 dark:bg-gray-900 rounded-lg mb-3">
+            Yaklaşık <span className="font-semibold text-gray-700 dark:text-gray-300">
+              ${(total / 34.5).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span> (Kur: ~34.50)
+          </div>
+        )}
 
         {/* Submit Button */}
         <button

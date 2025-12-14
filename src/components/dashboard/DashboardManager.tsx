@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import type { Asset, User } from "@/types";
+import { calculateNetWorth, calculateProfitLoss, getUsdTryRate } from "@/lib/math";
 import AssetList from "./AssetList";
 import ChartArea from "./ChartArea";
 import QuickTrade from "./QuickTrade";
@@ -23,23 +24,21 @@ export default function DashboardManager({ marketData, user, children }: Dashboa
   // Get the selected asset from market data
   const selectedAsset = marketData.find((a) => a.symbol === selectedSymbol) || marketData[0];
 
-  // Calculate total holdings value and P/L
-  const { holdingsValue, profitLoss } = useMemo(() => {
-    let totalValue = 0;
-    let totalPL = 0;
-
-    user.portfolio.forEach((item) => {
-      const asset = marketData.find((a) => a.symbol === item.symbol);
-      if (asset) {
-        const currentValue = item.quantity * asset.price;
-        const costBasis = item.quantity * item.avgCost;
-        totalValue += currentValue;
-        totalPL += currentValue - costBasis;
-      }
-    });
-
-    return { holdingsValue: totalValue, profitLoss: totalPL };
-  }, [user.portfolio, marketData]);
+  // Use centralized calculation for proper TRY/USD conversion
+  const { cashBalanceUsd, holdingsValue, profitLoss } = useMemo(() => {
+    const usdTryRate = getUsdTryRate(marketData);
+    const netWorth = calculateNetWorth(user.balance, user.portfolio, marketData, usdTryRate);
+    const { totalPL } = calculateProfitLoss(user.portfolio, marketData, usdTryRate);
+    
+    // Total cash = TRY converted to USD + USD + USDT
+    const totalCashUsd = netWorth.cashTryInUsd + netWorth.cashUsd + netWorth.cashUsdt;
+    
+    return { 
+      cashBalanceUsd: totalCashUsd,
+      holdingsValue: netWorth.investmentsValueUsd, 
+      profitLoss: totalPL 
+    };
+  }, [user.portfolio, user.balance, marketData]);
 
   // Update symbol when marketData changes (e.g., on navigation)
   useEffect(() => {
@@ -60,7 +59,7 @@ export default function DashboardManager({ marketData, user, children }: Dashboa
           {/* Show PortfolioSummary only when logged in */}
           {session && (
             <PortfolioSummary 
-              balance={user.balance} 
+              balance={cashBalanceUsd}
               holdingsValue={holdingsValue}
               profitLoss={profitLoss}
             />
@@ -87,7 +86,10 @@ export default function DashboardManager({ marketData, user, children }: Dashboa
         <div className="lg:col-span-3 flex flex-col gap-6">
           <QuickTrade
             selectedAsset={selectedAsset}
-            availableBalance={user.balance}
+            tryBalance={user.balance}
+            usdBalance={user.portfolio.find(p => p.symbol === 'USD')?.quantity || 0}
+            usdtBalance={user.portfolio.find(p => p.symbol === 'USDT')?.quantity || 0}
+            ownedQuantity={user.portfolio.find(p => p.symbol === selectedSymbol)?.quantity || 0}
           />
           <OrderBook asset={selectedAsset} />
         </div>

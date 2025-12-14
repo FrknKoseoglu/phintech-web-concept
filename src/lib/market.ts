@@ -11,8 +11,8 @@ interface QuoteResult {
   regularMarketChangePercent?: number;
 }
 
-// UI symbols to Yahoo Finance symbols mapping
-const SYMBOL_MAP: Record<string, string> = {
+// UI symbols to Yahoo Finance symbols mapping (exported for use in chart data)
+export const SYMBOL_MAP: Record<string, string> = {
   // Crypto
   'BTC': 'BTC-USD',
   'ETH': 'ETH-USD',
@@ -32,10 +32,11 @@ const SYMBOL_MAP: Record<string, string> = {
   'EREGL': 'EREGL.IS',
   'SASA': 'SASA.IS',
   // Commodities
-  'XAU': 'GC=F',    // Gold
-  'XAG': 'SI=F',    // Silver
-  // Currency
-  'USD': 'TRY=X',   // USD/TRY
+  'XAU': 'GC=F',    // Gold (USD)
+  'XAG': 'SI=F',    // Silver (USD)
+  // Currencies (for exchange)
+  'USD': 'TRY=X',     // USD price in TRY
+  'USDT': 'USDT-USD', // USDT price in USD (will convert to TRY)
 };
 
 // Asset metadata (name, category, logo)
@@ -67,8 +68,9 @@ const ASSET_META: Record<string, AssetMeta> = {
   // Commodities
   'XAU': { name: 'Altın (Ons)', category: 'commodity', logo: '/logos/gold.svg' },
   'XAG': { name: 'Gümüş (Ons)', category: 'commodity', logo: '/logos/silver.svg' },
-  // Currency
-  'USD': { name: 'Dolar/TL', category: 'currency', logo: '/logos/usd.svg' },
+  // Currencies
+  'USD': { name: 'Amerikan Doları', category: 'currency', logo: '/logos/usd.svg' },
+  'USDT': { name: 'Tether', category: 'currency', logo: '/logos/usdt.svg' },
 };
 
 // Default fallback prices
@@ -90,8 +92,21 @@ const FALLBACK_PRICES: Record<string, number> = {
   'SASA': 62,
   'XAU': 2050,
   'XAG': 24,
-  'USD': 34,
+  'USD': 34.5,    // 1 USD = 34.5 TRY
+  'USDT': 34.3,   // 1 USDT ≈ 34.3 TRY
 };
+
+// Determine currency based on asset type
+// This determines what currency the PRICE is displayed in
+function getCurrency(uiSymbol: string): 'USD' | 'TRY' {
+  const yahooSymbol = SYMBOL_MAP[uiSymbol];
+  // BIST stocks are priced in TRY
+  if (yahooSymbol?.endsWith('.IS')) return 'TRY';
+  // USD and USDT are priced in TRY (for buying with TL)
+  if (uiSymbol === 'USD' || uiSymbol === 'USDT') return 'TRY';
+  // Everything else is in USD
+  return 'USD';
+}
 
 // Build seed assets from metadata
 const SEED_ASSETS: Asset[] = Object.entries(ASSET_META).map(([symbol, meta]) => ({
@@ -101,14 +116,16 @@ const SEED_ASSETS: Asset[] = Object.entries(ASSET_META).map(([symbol, meta]) => 
   changePercent: 0,
   logo: meta.logo,
   category: meta.category,
+  currency: getCurrency(symbol),
 }));
 
-// Market categories for filtering
+// Market categories for filtering (currencies hidden from default list)
 export const MARKET_CATEGORIES = {
   crypto: ['BTC', 'ETH', 'SOL', 'AVAX', 'DOGE'],
   abd: ['AAPL', 'TSLA', 'NVDA', 'AMZN', 'MSFT'],
   bist: ['THYAO', 'GARAN', 'AKBNK', 'EREGL', 'SASA'],
-  commodity: ['XAU', 'XAG', 'USD'],
+  commodity: ['XAU', 'XAG'],
+  // USD and USDT are searchable but not shown in default tabs
 };
 
 export async function getMarketData(): Promise<Asset[]> {
@@ -118,16 +135,28 @@ export async function getMarketData(): Promise<Asset[]> {
 
     console.log("✅ Yahoo Data:", results.length, "assets fetched.");
 
+    // Get USD/TRY rate for USDT conversion
+    const usdTryQuote = results.find((r: QuoteResult) => r.symbol === 'TRY=X');
+    const usdTryRate = usdTryQuote?.regularMarketPrice || 34.5;
+
     // Update assets with live data
     const updatedAssets = SEED_ASSETS.map((asset) => {
       const yahooSymbol = SYMBOL_MAP[asset.symbol];
       const quote = results.find((r: QuoteResult) => r.symbol === yahooSymbol);
 
       if (quote) {
+        let price = quote.regularMarketPrice || asset.price;
+        let changePercent = quote.regularMarketChangePercent || 0;
+        
+        // USDT is fetched as USDT-USD, convert to TRY
+        if (asset.symbol === 'USDT' && price > 0) {
+          price = price * usdTryRate; // 1 USDT = X USD * Y TRY/USD = Z TRY
+        }
+        
         return {
           ...asset,
-          price: quote.regularMarketPrice || asset.price,
-          changePercent: quote.regularMarketChangePercent || 0,
+          price,
+          changePercent,
         };
       }
       return asset;

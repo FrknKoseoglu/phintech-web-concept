@@ -10,7 +10,7 @@ import {
   Search,
 } from "lucide-react";
 import type { Asset, PortfolioItem } from "@/types";
-import { cn } from "@/lib/utils";
+import { cn, getHoldingUnit } from "@/lib/utils";
 
 interface HoldingWithDetails extends PortfolioItem {
   asset: Asset;
@@ -44,6 +44,19 @@ function getAssetIcon(symbol: string) {
     default:
       return <DollarSign className={cn(iconClass, "text-green-500")} />;
   }
+}
+
+// Format currency based on asset currency type
+function formatCurrency(amount: number, currency: 'USD' | 'TRY' = 'USD'): string {
+  if (currency === 'TRY') {
+    return new Intl.NumberFormat('tr-TR', { 
+      style: 'currency', 
+      currency: 'TRY',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount);
+  }
+  return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 const tabs = ["Tümü", "Spot", "Funding"];
@@ -155,7 +168,7 @@ export default function HoldingsTable({ holdings, cashBalance }: HoldingsTablePr
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">
-                    ${holding.asset.price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    {formatCurrency(holding.asset.price, holding.asset.currency)}
                   </td>
                   <td className="px-6 py-4">
                     <span
@@ -174,7 +187,9 @@ export default function HoldingsTable({ holdings, cashBalance }: HoldingsTablePr
                     </span>
                   </td>
                   <td className="px-6 py-4 text-gray-900 dark:text-white">
-                    <div className="font-medium">{holding.quantity.toFixed(4)}</div>
+                    <div className="font-medium">
+                      {holding.quantity.toFixed(4)} {getHoldingUnit(holding.symbol)}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <span

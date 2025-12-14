@@ -1,4 +1,6 @@
 import { TrendingUp, TrendingDown, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
+import MoneyDisplay from "@/components/ui/MoneyDisplay";
+import { formatMoney } from "@/lib/utils";
 
 interface PortfolioSummaryProps {
   balance: number;
@@ -39,16 +41,15 @@ export default function PortfolioSummary({
 
       <div className="flex items-baseline space-x-2">
         <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-          ${totalNetWorth.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+          <MoneyDisplay amount={totalNetWorth} currency="USD" decimalClassName="opacity-50" />
         </h2>
-        <span className="text-sm text-text-muted">USD</span>
       </div>
 
       {/* Breakdown */}
       {holdingsValue > 0 && (
         <div className="mt-3 flex gap-4 text-xs text-gray-400">
-          <span>Nakit: ${balance.toLocaleString("en-US", { minimumFractionDigits: 0 })}</span>
-          <span>Yatırım: ${holdingsValue.toLocaleString("en-US", { minimumFractionDigits: 0 })}</span>
+          <span>Nakit: {formatMoney(balance, { currency: 'USD' }).full}</span>
+          <span>Yatırım: {formatMoney(holdingsValue, { currency: 'USD' }).full}</span>
         </div>
       )}
 
@@ -65,3 +66,4 @@ export default function PortfolioSummary({
     </div>
   );
 }
+

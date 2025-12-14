@@ -5,7 +5,7 @@
 // ============================================
 
 import type { Asset, User, Transaction, PortfolioItem } from "@/types";
-import { getMarketData, getAssetBySymbol, resetMarketPrices } from "@/lib/market";
+import { getMarketData, getAssetBySymbol, resetMarketPrices, SYMBOL_MAP } from "@/lib/market";
 import prisma from "@/lib/prisma";
 
 // Default user ID for demo (in production, get from session)
@@ -125,17 +125,7 @@ export interface ChartDataPoint {
   timestamp: number;
 }
 
-// Symbol mapping for Yahoo Finance
-const SYMBOL_MAP: Record<string, string> = {
-  'BTC': 'BTC-USD',
-  'ETH': 'ETH-USD',
-  'AAPL': 'AAPL',
-  'TSLA': 'TSLA',
-  'NVDA': 'NVDA',
-  'THYAO': 'THYAO.IS',
-  'USD': 'TRY=X',
-  'XAU': 'GC=F',
-};
+// Note: SYMBOL_MAP is imported from @/lib/market
 
 /**
  * Server Action: Fetches historical price data for charting.

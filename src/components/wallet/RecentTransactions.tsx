@@ -1,5 +1,6 @@
 import { Download, ShoppingCart, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import type { Transaction } from "@/types";
+import { getHoldingUnit } from "@/lib/utils";
 
 interface RecentTransactionsProps {
   transactions: Transaction[];
@@ -93,7 +94,7 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
                     {isPositive ? "+" : "-"}${tx.total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {tx.quantity.toFixed(4)} {tx.symbol}
+                    {tx.quantity.toFixed(4)} {getHoldingUnit(tx.symbol)}
                   </div>
                 </div>
               </div>

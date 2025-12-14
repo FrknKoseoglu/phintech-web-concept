@@ -10,6 +10,11 @@ export type AssetCategory = "crypto" | "stock" | "commodity" | "currency";
 /**
  * Represents a tradable asset in the market.
  */
+/**
+ * Currency type for assets.
+ */
+export type AssetCurrency = 'USD' | 'TRY';
+
 export interface Asset {
   symbol: string;
   name: string;
@@ -17,6 +22,7 @@ export interface Asset {
   changePercent: number;
   logo: string;
   category: AssetCategory;
+  currency: AssetCurrency;
 }
 
 /**

@@ -1,5 +1,6 @@
 import { fetchUser, fetchTransactions } from "@/actions/market";
 import { getMarketDataSnapshot } from "@/lib/market";
+import { calculateNetWorth, calculateProfitLoss, getUsdTryRate } from "@/lib/math";
 import type { PortfolioHolding, AssetCategory } from "@/types";
 import { TrendingUp, TrendingDown, ArrowDownToLine, ArrowUpFromLine, Search } from "lucide-react";
 import Link from "next/link";
@@ -39,9 +40,9 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
     getMarketDataSnapshot(),
   ]);
 
-  // Build holdings with calculated values
+  // Build holdings with calculated values (excluding currency holdings)
   const allHoldings: PortfolioHolding[] = user.portfolio
-    .filter((item) => item.quantity > 0.00001)
+    .filter((item) => item.quantity > 0.00001 && !['USD', 'USDT'].includes(item.symbol))
     .map((item) => {
       const asset = marketData.find((a) => a.symbol === item.symbol);
       if (!asset) return null;
@@ -70,35 +71,36 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
     ? allHoldings.filter((h) => h.category === categoryFilter)
     : allHoldings;
 
-  // Calculate totals (always from all holdings for summary)
-  const totalHoldingsValue = allHoldings.reduce((sum, h) => sum + h.currentValue, 0);
-  const totalNetWorth = user.balance + totalHoldingsValue;
-  const totalProfitLoss = allHoldings.reduce((sum, h) => sum + h.profitLoss, 0);
-  const totalProfitLossPercent = totalHoldingsValue > 0 
-    ? (totalProfitLoss / (totalHoldingsValue - totalProfitLoss)) * 100 
-    : 0;
+  // Get USD/TRY rate from market data
+  const usdTryRate = getUsdTryRate(marketData);
+  const usdtAsset = marketData.find(a => a.symbol === 'USDT');
+  const usdtRate = usdtAsset?.price || 34.3;
 
-  // Calculate dynamic distribution by category
-  const cryptoValue = allHoldings
-    .filter((h) => h.category === "crypto")
-    .reduce((sum, h) => sum + h.currentValue, 0);
-  const stockValue = allHoldings
-    .filter((h) => h.category === "stock")
-    .reduce((sum, h) => sum + h.currentValue, 0);
-  const commodityValue = allHoldings
-    .filter((h) => h.category === "commodity")
-    .reduce((sum, h) => sum + h.currentValue, 0);
-  const cashValue = user.balance;
+  // Use centralized calculation (properly converts TRY to USD)
+  const netWorth = calculateNetWorth(user.balance, user.portfolio, marketData, usdTryRate);
+  const { totalPL, totalPLPercent } = calculateProfitLoss(user.portfolio, marketData, usdTryRate);
 
-  // Calculate percentages (avoid division by zero)
+  // Extract values for display
+  const tryBalance = user.balance;
+  const usdBalance = netWorth.cashUsd;
+  const usdtBalance = netWorth.cashUsdt;
+  const tryInUsd = netWorth.cashTryInUsd;
+  const usdtInUsd = usdtBalance; // USDT ~= USD
+  const totalNetWorth = netWorth.totalUsd;
+  const totalProfitLoss = totalPL;
+  const totalProfitLossPercent = totalPLPercent;
+
+  // Calculate percentages for distribution (avoid division by zero)
   const calcPercent = (value: number) => 
     totalNetWorth > 0 ? Math.round((value / totalNetWorth) * 100) : 0;
 
   const distributions = [
-    { label: "Hisse", percent: calcPercent(stockValue), color: "bg-primary" },
-    { label: "Kripto", percent: calcPercent(cryptoValue), color: "bg-purple-400" },
-    { label: "Emtia", percent: calcPercent(commodityValue), color: "bg-orange-400" },
-    { label: "Nakit", percent: calcPercent(cashValue), color: "bg-blue-400" },
+    { label: "Hisse", percent: calcPercent(netWorth.breakdown.stocks), color: "bg-primary" },
+    { label: "Kripto", percent: calcPercent(netWorth.breakdown.crypto), color: "bg-purple-400" },
+    { label: "Emtia", percent: calcPercent(netWorth.breakdown.commodities), color: "bg-orange-400" },
+    { label: "TL", percent: calcPercent(tryInUsd), color: "bg-red-400" },
+    { label: "USD", percent: calcPercent(usdBalance), color: "bg-green-400" },
+    { label: "USDT", percent: calcPercent(usdtInUsd), color: "bg-blue-400" },
   ].filter((d) => d.percent > 0); // Only show categories with value
 
   // Get category label for display
@@ -229,36 +231,99 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                  {/* Cash Balance Row - only show when viewing all */}
+                  {/* Currency Balance Rows - only show when viewing all */}
                   {!categoryFilter && (
-                    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white text-xs font-bold">
-                            $
+                    <>
+                      {/* TRY Balance */}
+                      <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors bg-red-50/30 dark:bg-red-950/20">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-white text-xs font-bold">
+                              ₺
+                            </div>
+                            <div>
+                              <div className="font-bold text-gray-900 dark:text-white">TRY</div>
+                              <div className="text-xs text-gray-500">Türk Lirası</div>
+                            </div>
                           </div>
-                          <div>
-                            <div className="font-bold text-gray-900 dark:text-white">USD</div>
-                            <div className="text-xs text-gray-500">US Dollar</div>
+                        </td>
+                        <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">₺1.00</td>
+                        <td className="px-6 py-4">
+                          <span className="text-gray-400 font-medium">- 0.00%</span>
+                        </td>
+                        <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">
+                          ₺{tryBalance.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="px-6 py-4 text-right text-gray-900 dark:text-white font-bold">
+                          ${tryInUsd.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <Link href="/trade?symbol=USD" className="text-primary hover:text-primary-dark font-medium text-xs">USD Al</Link>
+                          <span className="mx-1 text-gray-300">|</span>
+                          <Link href="/trade?symbol=USDT" className="text-primary hover:text-primary-dark font-medium text-xs">USDT Al</Link>
+                        </td>
+                      </tr>
+
+                      {/* USD Balance */}
+                      <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors bg-green-50/30 dark:bg-green-950/20">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white text-xs font-bold">
+                              $
+                            </div>
+                            <div>
+                              <div className="font-bold text-gray-900 dark:text-white">USD</div>
+                              <div className="text-xs text-gray-500">Amerikan Doları</div>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">$1.00</td>
-                      <td className="px-6 py-4">
-                        <span className="text-gray-400 font-medium">- 0.00%</span>
-                      </td>
-                      <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">
-                        {user.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="px-6 py-4 text-right text-gray-900 dark:text-white font-bold">
-                        ${user.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button className="text-primary hover:text-primary-dark font-medium text-xs">Yatır</button>
-                        <span className="mx-1 text-gray-300">|</span>
-                        <button className="text-primary hover:text-primary-dark font-medium text-xs">Çek</button>
-                      </td>
-                    </tr>
+                        </td>
+                        <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">₺{usdTryRate.toFixed(2)}</td>
+                        <td className="px-6 py-4">
+                          <span className="text-gray-400 font-medium">- 0.00%</span>
+                        </td>
+                        <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">
+                          ${usdBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="px-6 py-4 text-right text-gray-900 dark:text-white font-bold">
+                          ${usdBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <Link href="/trade?symbol=USD" className="text-success hover:text-green-400 font-medium text-xs">Al</Link>
+                          <span className="mx-2 text-gray-600">|</span>
+                          <Link href="/trade?symbol=USD" className="text-danger hover:text-red-400 font-medium text-xs">Sat</Link>
+                        </td>
+                      </tr>
+
+                      {/* USDT Balance */}
+                      <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors bg-blue-50/30 dark:bg-blue-950/20">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">
+                              ₮
+                            </div>
+                            <div>
+                              <div className="font-bold text-gray-900 dark:text-white">USDT</div>
+                              <div className="text-xs text-gray-500">Tether</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">₺{usdtRate.toFixed(2)}</td>
+                        <td className="px-6 py-4">
+                          <span className="text-gray-400 font-medium">- 0.00%</span>
+                        </td>
+                        <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">
+                          {usdtBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })} USDT
+                        </td>
+                        <td className="px-6 py-4 text-right text-gray-900 dark:text-white font-bold">
+                          ${usdtInUsd.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <Link href="/trade?symbol=USDT" className="text-success hover:text-green-400 font-medium text-xs">Al</Link>
+                          <span className="mx-2 text-gray-600">|</span>
+                          <Link href="/trade?symbol=USDT" className="text-danger hover:text-red-400 font-medium text-xs">Sat</Link>
+                        </td>
+                      </tr>
+                    </>
                   )}
 
                   {/* Asset Rows */}

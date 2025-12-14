@@ -61,7 +61,7 @@ export default function TradeHeader({ asset, isFavorite: initialFavorite = false
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-              {asset.symbol}/USD
+              {asset.symbol}/{asset.currency === 'TRY' ? 'TRY' : 'USD'}
             </h1>
             <span className="bg-primary/15 text-primary text-xs px-2.5 py-1 rounded-full font-medium">
               {getCategoryLabel()}
@@ -77,10 +77,12 @@ export default function TradeHeader({ asset, isFavorite: initialFavorite = false
         {/* Price */}
         <div className="flex flex-col">
           <span className={cn("text-2xl font-bold", isPositive ? "text-success" : "text-danger")}>
-            ${asset.price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            {asset.currency === 'TRY' 
+              ? new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(asset.price)
+              : `$${asset.price.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
           </span>
           <span className={cn("text-xs font-medium", isPositive ? "text-success" : "text-danger")}>
-            {isPositive ? "+" : ""}${priceChange.toFixed(2)} ({isPositive ? "+" : ""}{asset.changePercent.toFixed(2)}%)
+            {isPositive ? "+" : ""}{asset.currency === 'TRY' ? '₺' : '$'}{priceChange.toFixed(2)} ({isPositive ? "+" : ""}{asset.changePercent.toFixed(2)}%)
           </span>
         </div>
 

@@ -18,10 +18,15 @@ interface AssetListProps {
   onSelectAsset?: (symbol: string) => void;
 }
 
-// Format price based on value
-function formatPrice(price: number, symbol: string): string {
-  if (symbol === "USD" || symbol === "TRY") {
-    return `₺${price.toFixed(2)}`;
+// Format price based on currency
+function formatPrice(price: number, currency: 'USD' | 'TRY'): string {
+  if (currency === 'TRY') {
+    return new Intl.NumberFormat('tr-TR', { 
+      style: 'currency', 
+      currency: 'TRY',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(price);
   }
   if (price >= 1000) {
     return `$${price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -132,7 +137,7 @@ export default function AssetList({ assets, selectedSymbol, onSelectAsset }: Ass
                         </div>
                         <div className="text-right">
                           <div className="font-semibold text-sm text-gray-900 dark:text-white">
-                            {formatPrice(asset.price, asset.symbol)}
+                            {formatPrice(asset.price, asset.currency)}
                           </div>
                           <div
                             className={cn(
