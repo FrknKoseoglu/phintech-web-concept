@@ -14,13 +14,15 @@ interface TradePageClientProps {
   user: User;
   transactions: Transaction[];
   initialSymbol?: string;
+  initialMode?: 'BUY' | 'SELL';
 }
 
 export default function TradePageClient({ 
   assets, 
   user, 
   transactions,
-  initialSymbol = "BTC" 
+  initialSymbol = "BTC",
+  initialMode = "BUY"
 }: TradePageClientProps) {
   const [selectedSymbol, setSelectedSymbol] = useState(initialSymbol);
 
@@ -78,6 +80,7 @@ export default function TradePageClient({
                 asset={selectedAsset} 
                 availableBalance={user.balance}
                 ownedQuantity={ownedQuantity}
+                initialMode={initialMode}
               />
             </div>
           </div>

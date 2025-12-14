@@ -9,13 +9,14 @@ export const metadata = {
 };
 
 interface TradePageProps {
-  searchParams: Promise<{ symbol?: string }>;
+  searchParams: Promise<{ symbol?: string; mode?: string }>;
 }
 
 export default async function TradePage({ searchParams }: TradePageProps) {
   // Await searchParams (Next.js 15 requirement)
   const params = await searchParams;
   const initialSymbol = params.symbol || "BTC";
+  const initialMode = (params.mode === 'sell' ? 'SELL' : 'BUY') as 'BUY' | 'SELL';
 
   // Fetch data via Server Actions
   const [assets, user, transactions] = await Promise.all([
@@ -30,6 +31,8 @@ export default async function TradePage({ searchParams }: TradePageProps) {
       user={user}
       transactions={transactions}
       initialSymbol={initialSymbol}
+      initialMode={initialMode}
     />
   );
 }
+

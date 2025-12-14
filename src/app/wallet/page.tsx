@@ -258,9 +258,9 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
                           ${tryInUsd.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <Link href="/trade?symbol=USD" className="text-primary hover:text-primary-dark font-medium text-xs">USD Al</Link>
+                          <Link href="/trade?symbol=USD&mode=buy" className="text-primary hover:text-primary-dark font-medium text-xs">USD Al</Link>
                           <span className="mx-1 text-gray-300">|</span>
-                          <Link href="/trade?symbol=USDT" className="text-primary hover:text-primary-dark font-medium text-xs">USDT Al</Link>
+                          <Link href="/trade?symbol=USDT&mode=buy" className="text-primary hover:text-primary-dark font-medium text-xs">USDT Al</Link>
                         </td>
                       </tr>
 
@@ -288,9 +288,9 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
                           ${usdBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <Link href="/trade?symbol=USD" className="text-success hover:text-green-400 font-medium text-xs">Al</Link>
+                          <Link href="/trade?symbol=USD&mode=buy" className="text-success hover:text-green-400 font-medium text-xs">Al</Link>
                           <span className="mx-2 text-gray-600">|</span>
-                          <Link href="/trade?symbol=USD" className="text-danger hover:text-red-400 font-medium text-xs">Sat</Link>
+                          <Link href="/trade?symbol=USD&mode=sell" className="text-danger hover:text-red-400 font-medium text-xs">Sat</Link>
                         </td>
                       </tr>
 
@@ -318,9 +318,9 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
                           ${usdtInUsd.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <Link href="/trade?symbol=USDT" className="text-success hover:text-green-400 font-medium text-xs">Al</Link>
+                          <Link href="/trade?symbol=USDT&mode=buy" className="text-success hover:text-green-400 font-medium text-xs">Al</Link>
                           <span className="mx-2 text-gray-600">|</span>
-                          <Link href="/trade?symbol=USDT" className="text-danger hover:text-red-400 font-medium text-xs">Sat</Link>
+                          <Link href="/trade?symbol=USDT&mode=sell" className="text-danger hover:text-red-400 font-medium text-xs">Sat</Link>
                         </td>
                       </tr>
                     </>
@@ -363,14 +363,14 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <Link 
-                            href={`/trade?symbol=${holding.symbol}`} 
+                            href={`/trade?symbol=${holding.symbol}&mode=buy`} 
                             className="text-success hover:text-green-400 font-medium text-xs transition-colors"
                           >
                             Al
                           </Link>
                           <span className="mx-2 text-gray-600">|</span>
                           <Link 
-                            href={`/trade?symbol=${holding.symbol}`} 
+                            href={`/trade?symbol=${holding.symbol}&mode=sell`} 
                             className="text-danger hover:text-red-400 font-medium text-xs transition-colors"
                           >
                             Sat

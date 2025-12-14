@@ -13,16 +13,18 @@ interface TradeFormProps {
   asset: Asset;
   availableBalance: number;
   ownedQuantity?: number;
+  initialMode?: 'BUY' | 'SELL';
 }
 
 export default function TradeForm({ 
   asset, 
   availableBalance,
   ownedQuantity = 0,
+  initialMode = 'BUY',
 }: TradeFormProps) {
   const { data: session } = useSession();
   const router = useRouter();
-  const [isBuy, setIsBuy] = useState(true);
+  const [isBuy, setIsBuy] = useState(initialMode === 'BUY');
   const [quantity, setQuantity] = useState("");
   const [sliderValue, setSliderValue] = useState(0);
   const [isPending, startTransition] = useTransition();
