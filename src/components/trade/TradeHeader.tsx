@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { Star, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Asset } from "@/types";
@@ -15,6 +15,11 @@ interface TradeHeaderProps {
 export default function TradeHeader({ asset, isFavorite: initialFavorite = false }: TradeHeaderProps) {
   const [isFavorite, setIsFavorite] = useState(initialFavorite);
   const [isPending, startTransition] = useTransition();
+  
+  // Sync state when prop changes (e.g., switching assets)
+  useEffect(() => {
+    setIsFavorite(initialFavorite);
+  }, [initialFavorite]);
   
   const isPositive = asset.changePercent >= 0;
   const priceChange = asset.price * (asset.changePercent / 100);

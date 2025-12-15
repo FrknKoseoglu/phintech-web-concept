@@ -16,6 +16,7 @@ interface AssetListProps {
   assets: Asset[];
   selectedSymbol?: string;
   onSelectAsset?: (symbol: string) => void;
+  favorites?: string[];
 }
 
 // Format price based on currency
@@ -42,7 +43,7 @@ const categories = [
   { id: "commodity", label: "Emtia & Döviz", filter: (a: Asset) => a.category === "commodity" || a.category === "currency" },
 ];
 
-export default function AssetList({ assets, selectedSymbol, onSelectAsset }: AssetListProps) {
+export default function AssetList({ assets, selectedSymbol, onSelectAsset, favorites = [] }: AssetListProps) {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     favorites: true,
     crypto: true,
@@ -54,11 +55,11 @@ export default function AssetList({ assets, selectedSymbol, onSelectAsset }: Ass
     setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // Favorites are first 3 assets for demo
-  const favorites = assets.slice(0, 3);
+  // Filter assets by user's actual favorites
+  const favoriteAssets = assets.filter(a => favorites.includes(a.symbol));
 
   const getAssetsForCategory = (category: typeof categories[0]) => {
-    if (category.id === "favorites") return favorites;
+    if (category.id === "favorites") return favoriteAssets;
     if (category.filter) return assets.filter(category.filter);
     return [];
   };
@@ -79,7 +80,9 @@ export default function AssetList({ assets, selectedSymbol, onSelectAsset }: Ass
           const categoryAssets = getAssetsForCategory(category);
           const isOpen = openSections[category.id];
 
-          if (categoryAssets.length === 0) return null;
+          // Show empty state for favorites, hide other empty categories
+          const isFavorites = category.id === "favorites";
+          if (categoryAssets.length === 0 && !isFavorites) return null;
 
           return (
             <div key={category.id} className="border-b border-gray-100 dark:border-gray-800 last:border-b-0">
@@ -106,7 +109,23 @@ export default function AssetList({ assets, selectedSymbol, onSelectAsset }: Ass
               {/* Accordion Content */}
               {isOpen && (
                 <div className="pb-2">
-                  {categoryAssets.map((asset) => {
+                  {/* Empty state for favorites */}
+                  {isFavorites && categoryAssets.length === 0 ? (
+                    <div className="px-4 py-6 text-center">
+                      <Star className="w-8 h-8 text-text-muted mx-auto mb-3 opacity-50" />
+                      <p className="text-sm text-text-muted mb-3">
+                        Henüz favori varlık eklemediniz. Trade sayfasından yıldız ikonuna tıklayarak ekleyebilirsiniz.
+                      </p>
+                      <a
+                        href="/trade"
+                        className="inline-flex items-center gap-1 text-sm text-primary hover:text-primary-hover font-medium transition-colors"
+                      >
+                        Trade Sayfasına Git
+                        <ChevronRight className="w-4 h-4" />
+                      </a>
+                    </div>
+                  ) : (
+                  categoryAssets.map((asset) => {
                     const isPositive = asset.changePercent >= 0;
                     const isSelected = asset.symbol === selectedSymbol;
 
@@ -156,7 +175,7 @@ export default function AssetList({ assets, selectedSymbol, onSelectAsset }: Ass
                         </div>
                       </div>
                     );
-                  })}
+                  }))}
                 </div>
               )}
             </div>

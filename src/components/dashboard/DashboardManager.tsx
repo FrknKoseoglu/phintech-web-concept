@@ -68,6 +68,7 @@ export default function DashboardManager({ marketData, user, children }: Dashboa
             assets={marketData} 
             selectedSymbol={selectedSymbol}
             onSelectAsset={handleAssetSelect}
+            favorites={user.favorites}
           />
         </div>
 
