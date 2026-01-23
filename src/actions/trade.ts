@@ -84,14 +84,17 @@ async function getOrCreateUser() {
 }
 
 /**
- * Execute a MARKET ORDER trade (BUY or SELL) for the given asset.
+ * INTERNAL SYSTEM TRADE FUNCTION
+ * Execute a trade on behalf of a specific user (no auth required).
+ * Used by Cron jobs and system processes.
  * 
  * TRIPLE-CURRENCY LOGIC:
  * - BIST stocks & Currency: Deduct/Add TRY from user.balance
  * - US Stocks: Deduct/Add USD from portfolio['USD']
  * - Crypto: Deduct/Add USDT from portfolio['USDT']
  */
-export async function executeTrade(
+export async function executeSystemTrade(
+  userId: string,
   symbol: string,
   quantity: number,
   type: "BUY" | "SELL"
@@ -123,7 +126,7 @@ export async function executeTrade(
 
     // ============ GET USER ============
     const user = await prisma.user.findUnique({
-      where: { id: DEMO_USER_ID },
+      where: { id: userId },
       include: { portfolio: true },
     });
 
@@ -170,7 +173,7 @@ export async function executeTrade(
       // Deduct from funding source
       if (fundingSource === 'TRY') {
         await prisma.user.update({
-          where: { id: DEMO_USER_ID },
+          where: { id: userId },
           data: { balance: { decrement: totalCost } },
         });
       } else if (fundingSource === 'USD') {
@@ -204,7 +207,7 @@ export async function executeTrade(
       } else {
         await prisma.portfolioItem.create({
           data: {
-            userId: DEMO_USER_ID,
+            userId: userId,
             symbol,
             quantity,
             avgCost: serverPrice,
@@ -227,7 +230,7 @@ export async function executeTrade(
       // Add proceeds to funding source
       if (fundingSource === 'TRY') {
         await prisma.user.update({
-          where: { id: DEMO_USER_ID },
+          where: { id: userId },
           data: { balance: { increment: totalCost } },
         });
       } else if (fundingSource === 'USD') {
@@ -240,7 +243,7 @@ export async function executeTrade(
         } else {
           await prisma.portfolioItem.create({
             data: {
-              userId: DEMO_USER_ID,
+              userId: userId,
               symbol: 'USD',
               quantity: totalCost,
               avgCost: 1,
@@ -257,7 +260,7 @@ export async function executeTrade(
         } else {
           await prisma.portfolioItem.create({
             data: {
-              userId: DEMO_USER_ID,
+              userId: userId,
               symbol: 'USDT',
               quantity: totalCost,
               avgCost: 1,
@@ -284,7 +287,7 @@ export async function executeTrade(
     // ============ CREATE TRANSACTION RECORD ============
     const transaction = await prisma.transaction.create({
       data: {
-        userId: DEMO_USER_ID,
+        userId: userId,
         type,
         symbol,
         quantity,
@@ -292,11 +295,6 @@ export async function executeTrade(
         total: totalCost,
       },
     });
-
-    // ============ REVALIDATE CACHED PAGES ============
-    revalidatePath("/");
-    revalidatePath("/trade");
-    revalidatePath("/wallet");
 
     // ============ RETURN SUCCESS ============
     const actionText = type === "BUY" ? "satın alındı" : "satıldı";
@@ -326,6 +324,45 @@ export async function executeTrade(
         date: transaction.date.toISOString(),
       },
     };
+  } catch (error) {
+    console.error("System trade execution error:", error);
+    const message = error instanceof Error ? error.message : "İşlem sırasında bir hata oluştu. Lütfen tekrar deneyin.";
+    return { success: false, message };
+  }
+}
+
+/**
+ * Execute a MARKET ORDER trade (BUY or SELL) for the given asset.
+ * This is the public-facing function that handles auth and revalidation.
+ * 
+ * TRIPLE-CURRENCY LOGIC:
+ * - BIST stocks & Currency: Deduct/Add TRY from user.balance
+ * - US Stocks: Deduct/Add USD from portfolio['USD']
+ * - Crypto: Deduct/Add USDT from portfolio['USDT']
+ */
+export async function executeTrade(
+  symbol: string,
+  quantity: number,
+  type: "BUY" | "SELL"
+): Promise<TradeResult> {
+  try {
+    // In production, we would check auth() here
+    // For demo mode, we use DEMO_USER_ID
+    
+    // Ensure demo user exists
+    await getOrCreateUser();
+    
+    // Execute the trade using the system function
+    const result = await executeSystemTrade(DEMO_USER_ID, symbol, quantity, type);
+    
+    // Revalidate cached pages on success
+    if (result.success) {
+      revalidatePath("/");
+      revalidatePath("/trade");
+      revalidatePath("/wallet");
+    }
+    
+    return result;
   } catch (error) {
     console.error("Trade execution error:", error);
     const message = error instanceof Error ? error.message : "İşlem sırasında bir hata oluştu. Lütfen tekrar deneyin.";

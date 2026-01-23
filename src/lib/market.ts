@@ -1,4 +1,5 @@
 import YahooFinance from 'yahoo-finance2';
+import { unstable_cache } from 'next/cache';
 import type { Asset, AssetCategory } from '@/types';
 
 // Yahoo Finance v3 requires instantiation
@@ -128,12 +129,22 @@ export const MARKET_CATEGORIES = {
   // USD and USDT are searchable but not shown in default tabs
 };
 
+// Cached wrapper for Yahoo Finance quote API
+const fetchYahooQuotes = unstable_cache(
+  async (symbols: string[]) => {
+    return await yahooFinance.quote(symbols) as QuoteResult[];
+  },
+  ['yahoo-market-quotes'],
+  { 
+    revalidate: 60, // Cache for 60 seconds
+    tags: ['market-data'] 
+  }
+);
+
 export async function getMarketData(): Promise<Asset[]> {
   try {
     const yahooSymbols = Object.values(SYMBOL_MAP);
-    const results = await yahooFinance.quote(yahooSymbols) as QuoteResult[];
-
-    console.log("✅ Yahoo Data:", results.length, "assets fetched.");
+    const results = await fetchYahooQuotes(yahooSymbols);
 
     // Get USD/TRY rate for USDT conversion
     const usdTryQuote = results.find((r: QuoteResult) => r.symbol === 'TRY=X');
@@ -164,8 +175,12 @@ export async function getMarketData(): Promise<Asset[]> {
 
     return updatedAssets;
 
-  } catch (error) {
-    console.error("❌ Yahoo Finance Error:", error);
+  } catch (error: any) {
+    if (error?.message?.includes('429') || error?.message?.includes('Too Many Requests')) {
+      console.error("❌ Yahoo Finance Rate Limit (429): Using fallback data. Cache should prevent this.");
+    } else {
+      console.error("❌ Yahoo Finance Error:", error);
+    }
     return SEED_ASSETS;
   }
 }

@@ -89,3 +89,25 @@ export interface PortfolioHolding {
   profitLossPercent: number;
   category: AssetCategory;
 }
+
+/**
+ * Status of a limit order.
+ */
+export type LimitOrderStatus = "PENDING" | "COMPLETED" | "CANCELLED" | "FAILED";
+
+/**
+ * Represents a limit order for automated trading.
+ */
+export interface LimitOrder {
+  id: string;
+  userId: string;
+  symbol: string;
+  quantity?: number;   // Optional: Asset quantity
+  amount?: number;     // Optional: Fiat amount
+  targetPrice: number;
+  type: "BUY" | "SELL";
+  status: LimitOrderStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+

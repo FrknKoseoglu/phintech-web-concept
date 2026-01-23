@@ -3,8 +3,8 @@ import { ExternalLink, Newspaper } from "lucide-react";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Haberler | Midas",
-  description: "Midas gündem ve finans haberleri",
+  title: "Haberler",
+  description: "Güncel finans haberleri",
 };
 
 export default async function NewsPage() {

@@ -19,6 +19,24 @@ model User {
   transactions  Transaction[]
   notifications Notification[]
   favorites     String[]  @default([])
+  limitOrders   LimitOrder[]
+}
+
+model LimitOrder {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symbol      String
+  quantity    Float?   // Optional: User specifies amount in Asset
+  amount      Float?   // Optional: User specifies amount in Fiat (USD/TRY)
+  targetPrice Float    // The price trigger
+  type        String   // "BUY" | "SELL"
+  status      String   @default("PENDING") // PENDING, COMPLETED, CANCELLED, FAILED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
 }
 
 model PortfolioItem {

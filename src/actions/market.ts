@@ -4,6 +4,8 @@
 // Midas Web Interface - Market Server Actions
 // ============================================
 
+import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
 import type { Asset, User, Transaction, PortfolioItem } from "@/types";
 import { getMarketData, getAssetBySymbol, resetMarketPrices, SYMBOL_MAP } from "@/lib/market";
 import prisma from "@/lib/prisma";
@@ -14,18 +16,20 @@ const DEMO_USER_ID = "demo_user_001";
 /**
  * Server Action: Fetches real market data from Yahoo Finance.
  * Falls back to static data if API fails.
+ * Wrapped with React cache() to deduplicate requests across components.
  */
-export async function fetchMarketData(): Promise<Asset[]> {
+export const fetchMarketData = cache(async (): Promise<Asset[]> => {
   return await getMarketData();
-}
+});
 
 /**
  * Server Action: Fetches a specific asset by symbol with real-time price.
+ * Wrapped with React cache() to deduplicate requests for the same symbol.
  */
-export async function fetchAsset(symbol: string): Promise<Asset | null> {
+export const fetchAsset = cache(async (symbol: string): Promise<Asset | null> => {
   const asset = await getAssetBySymbol(symbol);
   return asset ?? null;
-}
+});
 
 /**
  * Server Action: Fetches the current user data from the database.
@@ -127,18 +131,34 @@ export interface ChartDataPoint {
 
 // Note: SYMBOL_MAP is imported from @/lib/market
 
+// Cached wrapper for Yahoo Finance chart API
+const fetchYahooChart = unstable_cache(
+  async (yahooSymbol: string, period1Str: string, period2Str: string, interval: '1m' | '5m' | '1h' | '1d') => {
+    const YahooFinance = (await import('yahoo-finance2')).default;
+    const yahooFinance = new YahooFinance();
+    
+    return await yahooFinance.chart(yahooSymbol, {
+      period1: period1Str,
+      period2: period2Str,
+      interval,
+    });
+  },
+  ['yahoo-chart'],
+  { 
+    revalidate: 120, // Cache for 120 seconds
+    tags: ['chart-data'] 
+  }
+);
+
 /**
  * Server Action: Fetches historical price data for charting.
- * Uses Yahoo Finance chart API.
+ * Uses Yahoo Finance chart API with caching.
  */
 export async function getAssetHistory(
   symbol: string,
   range: '1d' | '1wk' | '1mo' | '3mo' = '1mo'
 ): Promise<ChartDataPoint[]> {
   try {
-    const YahooFinance = (await import('yahoo-finance2')).default;
-    const yahooFinance = new YahooFinance();
-    
     const yahooSymbol = SYMBOL_MAP[symbol] || symbol;
     
     // Calculate period based on range
@@ -165,11 +185,10 @@ export async function getAssetHistory(
         break;
     }
     
-    const result = await yahooFinance.chart(yahooSymbol, {
-      period1: period1.toISOString().split('T')[0],
-      period2: now.toISOString().split('T')[0],
-      interval,
-    });
+    const period1Str = period1.toISOString().split('T')[0];
+    const period2Str = now.toISOString().split('T')[0];
+    
+    const result = await fetchYahooChart(yahooSymbol, period1Str, period2Str, interval);
     
     if (!result.quotes || result.quotes.length === 0) {
       return generateFallbackData(range);
@@ -183,8 +202,12 @@ export async function getAssetHistory(
         timestamp: q.date.getTime(),
       }));
       
-  } catch (error) {
-    console.error("Failed to fetch chart data:", error);
+  } catch (error: any) {
+    if (error?.message?.includes('429') || error?.message?.includes('Too Many Requests')) {
+      console.error("❌ Yahoo Finance Chart Rate Limit (429): Using fallback data.");
+    } else {
+      console.error("❌ Failed to fetch chart data:", error);
+    }
     return generateFallbackData(range);
   }
 }
