@@ -80,7 +80,7 @@ const FALLBACK_PRICES: Record<string, number> = {
   'BTC': 89693,   // ✅ Updated from real market data
   'ETH': 2950,    // ✅ Updated from real market data
   'SOL': 127.89,  // ✅ Updated from real market data
-  'AVAX': 28.50,  // Estimated based on recent trends
+  'AVAX': 35.00,  // Updated fallback (CoinGecko provides real-time)
   'DOGE': 0.15,   // Estimated based on recent trends
   'AAPL': 210,    // Estimated Jan 2026
   'TSLA': 252,    // Estimated Jan 2026

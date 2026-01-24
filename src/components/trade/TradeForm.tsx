@@ -140,7 +140,7 @@ export default function TradeForm({
         <div className="flex justify-between items-center">
           <span className="text-xs text-gray-500 dark:text-gray-400">Piyasa Fiyatı</span>
           <span className="text-sm font-bold text-gray-900 dark:text-white">
-            ${asset.price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            {asset.currency === 'TRY' ? '₺' : '$'}{asset.price.toLocaleString(asset.currency === 'TRY' ? "tr-TR" : "en-US", { minimumFractionDigits: 2 })}
           </span>
         </div>
       </div>
@@ -222,7 +222,7 @@ export default function TradeForm({
         <span>{isBuy ? "Kullanılabilir Bakiye" : "Sahip Olduğunuz"}</span>
         <span className="font-medium text-gray-700 dark:text-gray-200">
           {isBuy 
-            ? `$${availableBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+            ? `${asset.currency === 'TRY' ? '₺' : '$'}${availableBalance.toLocaleString(asset.currency === 'TRY' ? "tr-TR" : "en-US", { minimumFractionDigits: 2 })}`
             : `${ownedQuantity.toFixed(4)} ${getHoldingUnit(asset.symbol)}`
           }
         </span>
@@ -232,7 +232,7 @@ export default function TradeForm({
       <div className="flex justify-between text-sm mb-4 py-3 border-y border-gray-200 dark:border-gray-800">
         <span className="text-gray-500 dark:text-gray-400">Tahmini Toplam</span>
         <span className="font-bold text-lg text-gray-900 dark:text-white">
-          ${estimatedTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          {asset.currency === 'TRY' ? '₺' : '$'}{estimatedTotal.toLocaleString(asset.currency === 'TRY' ? "tr-TR" : "en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </span>
       </div>
 

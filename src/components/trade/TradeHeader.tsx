@@ -142,7 +142,16 @@ export default function TradeHeader({ asset, isFavorite: initialFavorite = false
         >
           <Star className={cn("w-5 h-5", isFavorite && "fill-current")} />
         </button>
-        <button className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl text-gray-400 transition-all">
+        <button 
+          onClick={() => {
+            const url = `${window.location.origin}/trade?symbol=${asset.symbol}`;
+            navigator.clipboard.writeText(url);
+            toast.success("Link kopyalandı!", {
+              description: `${asset.symbol} trade linki panoya kopyalandı`,
+            });
+          }}
+          className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl text-gray-400 transition-all"
+        >
           <Share2 className="w-5 h-5" />
         </button>
       </div>

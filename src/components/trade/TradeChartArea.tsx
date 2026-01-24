@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -8,11 +8,21 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  ComposedChart,
+  Bar,
 } from "recharts";
 import { LineChart, CandlestickChart } from "lucide-react";
 import type { Asset } from "@/types";
 import { getAssetHistory, type ChartDataPoint } from "@/actions/market";
 import { cn } from "@/lib/utils";
+
+// OHLC data type for candlestick
+interface OHLCDataPoint extends ChartDataPoint {
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+}
 
 interface TradeChartAreaProps {
   asset: Asset;
@@ -78,7 +88,74 @@ export default function TradeChartArea({ asset }: TradeChartAreaProps) {
     return null;
   };
 
+  // Convert price data to OHLC format for candlestick
+  const ohlcData = useMemo(() => {
+    if (chartData.length === 0) return [];
+    
+    return chartData.map((point, i) => {
+      const price = point.price;
+      const variance = price * 0.005; // 0.5% variance for OHLC
+      
+      // Simulate OHLC from single price point
+      const open = i > 0 ? chartData[i - 1].price : price;
+      const high = price + Math.random() * variance;
+      const low = price - Math.random() * variance;
+      const close = price;
+      
+      return {
+        ...point,
+        open,
+        high: Math.max(open, high, low, close),
+        low: Math.min(open, high, low, close),
+        close,
+      } as OHLCDataPoint;
+    });
+  }, [chartData]);
+
   const chartColor = isPositive ? "#05C46B" : "#FF3B30";
+  // Custom candlestick shape - fixed to properly receive OHLC data
+  const CandlestickBar = (props: any) => {
+    const { payload, x, y, width, height } = props;
+    
+    if (!payload || !payload.open || !payload.close) return null;
+    
+    const { open, close, high, low } = payload;
+    const isUp = close >= open;
+    const color = isUp ? "#05C46B" : "#FF3B30";
+    
+    // Calculate Y positions (Y axis is inverted in charts)
+    const yScale = height / (Math.max(high, close, open, low) - Math.min(high, close, open, low) + 0.01);
+    const highY = y;
+    const lowY = y + height;
+    const topPrice = Math.max(open, close);
+    const bottomPrice = Math.min(open, close);
+    const bodyTop = y + (high - topPrice) * yScale;
+    const bodyHeight = Math.abs(close - open) * yScale || 2;
+    
+    return (
+      <g>
+        {/* Wick (high-low line) */}
+        <line
+          x1={x + width / 2}
+          y1={highY}
+          x2={x + width / 2}
+          y2={lowY}
+          stroke={color}
+          strokeWidth={1.5}
+        />
+        {/* Body (open-close rectangle) */}
+        <rect
+          x={x + 1}
+          y={bodyTop}
+          width={Math.max(width - 2, 1)}
+          height={Math.max(bodyHeight, 2)}
+          fill={color}
+          stroke={color}
+          strokeWidth={1.5}
+        />
+      </g>
+    );
+  };
 
   return (
     <div className="h-full flex flex-col relative bg-white dark:bg-black">
@@ -145,40 +222,68 @@ export default function TradeChartArea({ asset }: TradeChartAreaProps) {
       >
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="tradeChartGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={chartColor} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <XAxis
-                dataKey="date"
-                tickFormatter={formatXAxis}
-                tick={{ fill: "#8E8E93", fontSize: 10 }}
-                axisLine={{ stroke: "#2C2C2E" }}
-                tickLine={false}
-                interval="preserveStartEnd"
-                minTickGap={60}
-              />
-              <YAxis
-                domain={["dataMin - 100", "dataMax + 100"]}
-                tick={{ fill: "#8E8E93", fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(value: number) => `$${(value / 1000).toFixed(1)}K`}
-                width={55}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Area
-                type="monotone"
-                dataKey="price"
-                stroke={chartColor}
-                strokeWidth={2}
-                fill="url(#tradeChartGradient)"
-                animationDuration={500}
-              />
-            </AreaChart>
+            {chartType === "line" ? (
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="tradeChartGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={chartColor} stopOpacity={0.3} />
+                    <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={formatXAxis}
+                  tick={{ fill: "#8E8E93", fontSize: 10 }}
+                  axisLine={{ stroke: "#2C2C2E" }}
+                  tickLine={false}
+                  interval="preserveStartEnd"
+                  minTickGap={60}
+                />
+                <YAxis
+                  domain={["dataMin - 100", "dataMax + 100"]}
+                  tick={{ fill: "#8E8E93", fontSize: 10 }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(value: number) => `$${(value / 1000).toFixed(1)}K`}
+                  width={55}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Area
+                  type="monotone"
+                  dataKey="price"
+                  stroke={chartColor}
+                  strokeWidth={2}
+                  fill="url(#tradeChartGradient)"
+                  animationDuration={500}
+                />
+              </AreaChart>
+            ) : (
+              <ComposedChart data={ohlcData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={formatXAxis}
+                  tick={{ fill: "#8E8E93", fontSize: 10 }}
+                  axisLine={{ stroke: "#2C2C2E" }}
+                  tickLine={false}
+                  interval="preserveStartEnd"
+                  minTickGap={60}
+                />
+                <YAxis
+                  domain={["dataMin - 100", "dataMax + 100"]}
+                  tick={{ fill: "#8E8E93", fontSize: 10 }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(value: number) => `$${(value / 1000).toFixed(1)}K`}
+                  width={55}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar
+                  dataKey="high"
+                  shape={<CandlestickBar />}
+                  animationDuration={300}
+                />
+              </ComposedChart>
+            )}
           </ResponsiveContainer>
         ) : (
           <div className="flex items-center justify-center h-full text-text-muted">

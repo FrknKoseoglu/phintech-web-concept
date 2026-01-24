@@ -161,6 +161,11 @@ export async function getAssetHistory(
   try {
     const yahooSymbol = SYMBOL_MAP[symbol] || symbol;
     
+    // Get current asset price for fallback data
+    const marketData = await getMarketData();
+    const currentAsset = marketData.find(a => a.symbol === symbol);
+    const currentPrice = currentAsset?.price || 100; // Default if asset not found
+    
     // Calculate period based on range
     const now = new Date();
     let period1: Date;
@@ -191,7 +196,7 @@ export async function getAssetHistory(
     const result = await fetchYahooChart(yahooSymbol, period1Str, period2Str, interval);
     
     if (!result.quotes || result.quotes.length === 0) {
-      return generateFallbackData(range);
+      return generateFallbackData(range, symbol, currentPrice);
     }
     
     return result.quotes
@@ -203,28 +208,51 @@ export async function getAssetHistory(
       }));
       
   } catch (error: any) {
+    // Get current price for fallback in error case
+    const marketData = await getMarketData().catch(() => []);
+    const currentAsset = marketData.find(a => a.symbol === symbol);
+    const currentPrice = currentAsset?.price || 100;
+    
     if (error?.message?.includes('429') || error?.message?.includes('Too Many Requests')) {
       console.error("❌ Yahoo Finance Chart Rate Limit (429): Using fallback data.");
     } else {
       console.error("❌ Failed to fetch chart data:", error);
     }
-    return generateFallbackData(range);
+    return generateFallbackData(range, symbol, currentPrice);
   }
 }
 
-// Generate fallback data for demo/offline
-function generateFallbackData(range: string): ChartDataPoint[] {
+// Generate fallback data for demo/offline - uses current asset price
+function generateFallbackData(range: string, symbol: string, currentPrice: number): ChartDataPoint[] {
   const now = Date.now();
   const points = range === '1d' ? 24 : range === '1wk' ? 7 : 30;
   const msPerPoint = range === '1d' ? 3600000 : 86400000;
   
-  let price = 42000 + Math.random() * 1000;
+  // Start from current price instead of hardcoded 42000
+  let price = currentPrice;
+  
+  // Calculate variance based on asset type and price range
+  // Higher variance for better visibility
+  let variancePercent = 0.04; // Default 4%
+  if (symbol.endsWith('.IS')) {
+    variancePercent = 0.035; // BIST: 3.5%
+  } else if (currentPrice < 10) {
+    variancePercent = 0.05; // Low price assets: 5%
+  }
+  
+  const variance = currentPrice * variancePercent;
   
   return Array.from({ length: points }, (_, i) => {
-    price += (Math.random() - 0.48) * 500;
+    // Random walk with trend
+    const randomChange = (Math.random() - 0.5) * variance;
+    price += randomChange;
+    
+    // Keep price within reasonable bounds (±7% from current for better visibility)
+    price = Math.max(currentPrice * 0.93, Math.min(currentPrice * 1.07, price));
+    
     return {
       date: new Date(now - (points - i) * msPerPoint).toISOString(),
-      price: Math.max(price, 35000),
+      price: price,
       timestamp: now - (points - i) * msPerPoint,
     };
   });
