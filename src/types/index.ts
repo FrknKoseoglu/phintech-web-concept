@@ -13,7 +13,7 @@ export type AssetCategory = "crypto" | "stock" | "commodity" | "currency";
 /**
  * Currency type for assets.
  */
-export type AssetCurrency = 'USD' | 'TRY';
+export type AssetCurrency = 'USD' | 'TRY' | 'USDT';
 
 export interface Asset {
   symbol: string;

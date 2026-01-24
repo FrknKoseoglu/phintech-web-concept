@@ -100,13 +100,20 @@ const FALLBACK_PRICES: Record<string, number> = {
 
 // Determine currency based on asset type
 // This determines what currency the PRICE is displayed in
-function getCurrency(uiSymbol: string): 'USD' | 'TRY' {
+function getCurrency(uiSymbol: string): 'USD' | 'TRY' | 'USDT' {
   const yahooSymbol = SYMBOL_MAP[uiSymbol];
+  const meta = ASSET_META[uiSymbol];
+  
+  // Crypto assets are priced in USDT
+  if (meta?.category === 'crypto') return 'USDT';
+  
   // BIST stocks are priced in TRY
   if (yahooSymbol?.endsWith('.IS')) return 'TRY';
-  // USD and USDT are priced in TRY (for buying with TL)
+  
+  // USD and USDT themselves are priced in TRY (for buying with TL)
   if (uiSymbol === 'USD' || uiSymbol === 'USDT') return 'TRY';
-  // Everything else is in USD
+  
+  // US stocks and commodities are priced in USD
   return 'USD';
 }
 

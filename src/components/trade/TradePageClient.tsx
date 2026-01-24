@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { Asset, User, Transaction } from "@/types";
 import AssetSidebar from "@/components/trade/AssetSidebar";
 import TradeHeader from "@/components/trade/TradeHeader";
@@ -34,6 +34,28 @@ export default function TradePageClient({
 
   // Check if symbol is in favorites
   const isFavorite = user.favorites?.includes(selectedSymbol) || false;
+
+  // Calculate available balance in correct quote currency
+  const availableBalance = useMemo(() => {
+    // Get quote currency from asset
+    const quoteCurrency = selectedAsset.currency;
+    
+    if (quoteCurrency === 'TRY') {
+      // Asset priced in TRY, use TRY balance
+      return user.balance;
+    } else if (quoteCurrency === 'USD') {
+      // Asset priced in USD, find USD holdings
+      const usdHolding = user.portfolio.find(p => p.symbol === 'USD');
+      return usdHolding?.quantity || 0;
+    } else if (quoteCurrency === 'USDT') {
+      // Asset priced in USDT, find USDT holdings
+      const usdtHolding = user.portfolio.find(p => p.symbol === 'USDT');
+      return usdtHolding?.quantity || 0;
+    }
+    
+    // Default to TRY balance
+    return user.balance;
+  }, [selectedAsset.currency, user.balance, user.portfolio]);
 
   return (
     <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)] w-full max-w-[1920px] mx-auto overflow-hidden bg-gray-100 dark:bg-[#0a0a0a] p-2 gap-2">
@@ -78,7 +100,7 @@ export default function TradePageClient({
             <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 bg-white dark:bg-black">
               <TradeForm 
                 asset={selectedAsset} 
-                availableBalance={user.balance}
+                availableBalance={availableBalance}
                 ownedQuantity={ownedQuantity}
                 initialMode={initialMode}
               />

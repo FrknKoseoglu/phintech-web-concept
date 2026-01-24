@@ -90,3 +90,42 @@ export function formatMoney(
     decimals: decimals + suffix,
   };
 }
+
+/**
+ * Format currency with proper symbol and locale.
+ * Supports TRY (₺), USD ($), USDT (₮)
+ * 
+ * @example
+ * formatCurrency(1000, 'TRY') -> "₺1.000,00"
+ * formatCurrency(1000, 'USD') -> "$1,000.00"
+ * formatCurrency(1000, 'USDT') -> "₮1,000.00"
+ */
+export function formatCurrency(
+  amount: number | { toNumber: () => number }, // Support Prisma Decimal
+  currency: 'TRY' | 'USD' | 'USDT'
+): string {
+  // Convert Decimal to number if needed
+  const numAmount = typeof amount === 'number' ? amount : amount.toNumber();
+
+  const symbols = {
+    TRY: '₺',
+    USD: '$',
+    USDT: '₮',
+  };
+
+  const locales = {
+    TRY: 'tr-TR',
+    USD: 'en-US',
+    USDT: 'en-US',
+  };
+
+  const symbol = symbols[currency];
+  const locale = locales[currency];
+
+  const formatted = numAmount.toLocaleString(locale, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  return `${symbol}${formatted}`;
+}

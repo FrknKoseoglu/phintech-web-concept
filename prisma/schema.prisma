@@ -12,7 +12,7 @@ model User {
   email         String    @unique
   name          String?
   password      String?
-  balance       Float     @default(100000)
+  balance       Float     @default(100000) // Demo: 100k TL starting balance
   createdAt     DateTime  @default(now())
   
   portfolio     PortfolioItem[]

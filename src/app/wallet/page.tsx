@@ -140,7 +140,7 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
                 </span>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                ≈ ₺{(totalNetWorth * 34).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
+                ≈ ₺{(totalNetWorth * usdTryRate).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
               </p>
             </div>
             <div className="flex gap-3">
@@ -238,8 +238,8 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                  {/* Currency Balance Rows - only show when viewing all */}
-                  {!categoryFilter && (
+                  {/* Currency Balance Rows - show when viewing all or commodity */}
+                  {(!categoryFilter || categoryFilter === "commodity") && (
                     <>
                       {/* TRY Balance */}
                       <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors bg-red-50/30 dark:bg-red-950/20">

@@ -152,7 +152,7 @@ export default function AssetSidebar({
                       </span>
                     </div>
                     <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                      ${asset.price.toLocaleString("en-US", {
+                      {asset.currency === 'TRY' ? '₺' : asset.currency === 'USDT' ? '₮' : '$'}{asset.price.toLocaleString(asset.currency === 'TRY' ? "tr-TR" : "en-US", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}

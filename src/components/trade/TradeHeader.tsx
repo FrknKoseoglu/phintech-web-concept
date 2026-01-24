@@ -66,7 +66,7 @@ export default function TradeHeader({ asset, isFavorite: initialFavorite = false
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-              {asset.symbol}/{asset.currency === 'TRY' ? 'TRY' : 'USD'}
+              {asset.symbol}/{asset.currency}
             </h1>
             <span className="bg-primary/15 text-primary text-xs px-2.5 py-1 rounded-full font-medium">
               {getCategoryLabel()}
