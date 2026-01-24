@@ -143,7 +143,7 @@ const fetchYahooChart = unstable_cache(
       interval,
     });
   },
-  ['yahoo-chart'],
+  ['yahoo-chart-v2'], // Bump version to force cache invalidation
   { 
     revalidate: 120, // Cache for 120 seconds
     tags: ['chart-data'] 

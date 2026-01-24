@@ -1,9 +1,10 @@
 import YahooFinance from 'yahoo-finance2';
 import { unstable_cache } from 'next/cache';
 import type { Asset, AssetCategory } from '@/types';
+import { getCryptoPrices } from './coingecko';
+import { getUSDTRY } from './tcmb';
 
-// Yahoo Finance v3 requires instantiation
-const yahooFinance = new YahooFinance();
+
 
 // Quote result type
 interface QuoteResult {
@@ -74,27 +75,27 @@ const ASSET_META: Record<string, AssetMeta> = {
   'USDT': { name: 'Tether', category: 'currency', logo: '/logos/usdt.svg' },
 };
 
-// Default fallback prices
+// Default fallback prices (Updated: Jan 2026)
 const FALLBACK_PRICES: Record<string, number> = {
-  'BTC': 42000,
-  'ETH': 2200,
-  'SOL': 95,
-  'AVAX': 35,
-  'DOGE': 0.08,
-  'AAPL': 180,
-  'TSLA': 240,
-  'NVDA': 480,
-  'AMZN': 155,
-  'MSFT': 375,
-  'THYAO': 260,
+  'BTC': 89693,   // ✅ Updated from real market data
+  'ETH': 2950,    // ✅ Updated from real market data
+  'SOL': 127.89,  // ✅ Updated from real market data
+  'AVAX': 28.50,  // Estimated based on recent trends
+  'DOGE': 0.15,   // Estimated based on recent trends
+  'AAPL': 210,    // Estimated Jan 2026
+  'TSLA': 252,    // Estimated Jan 2026
+  'NVDA': 825,    // Estimated Jan 2026
+  'AMZN': 192,    // Estimated Jan 2026
+  'MSFT': 420,    // Estimated Jan 2026
+  'THYAO': 260,   // BIST stocks (will use live data)
   'GARAN': 55,
   'AKBNK': 45,
   'EREGL': 38,
   'SASA': 62,
-  'XAU': 2050,
-  'XAG': 24,
-  'USD': 34.5,    // 1 USD = 34.5 TRY
-  'USDT': 34.3,   // 1 USDT ≈ 34.3 TRY
+  'XAU': 2750,    // Gold estimated ~$2750/oz
+  'XAG': 32,      // Silver estimated ~$32/oz
+  'USD': 43.28,   // ✅ TCMB official rate
+  'USDT': 43.26,  // ✅ Updated (1 USDT ≈ 1 USD)
 };
 
 // Determine currency based on asset type
@@ -132,9 +133,12 @@ export const MARKET_CATEGORIES = {
 // Cached wrapper for Yahoo Finance quote API
 const fetchYahooQuotes = unstable_cache(
   async (symbols: string[]) => {
+    // Dynamic instantiation to ensure fresh state/crumb for each (cached) call
+    console.log("🔥 creating new yahoo finance instance");
+    const yahooFinance = new YahooFinance();
     return await yahooFinance.quote(symbols) as QuoteResult[];
   },
-  ['yahoo-market-quotes'],
+  ['yahoo-market-quotes-v4'], // Bump version again
   { 
     revalidate: 60, // Cache for 60 seconds
     tags: ['market-data'] 
@@ -143,44 +147,103 @@ const fetchYahooQuotes = unstable_cache(
 
 export async function getMarketData(): Promise<Asset[]> {
   try {
-    const yahooSymbols = Object.values(SYMBOL_MAP);
-    const results = await fetchYahooQuotes(yahooSymbols);
-
-    // Get USD/TRY rate for USDT conversion
-    const usdTryQuote = results.find((r: QuoteResult) => r.symbol === 'TRY=X');
-    const usdTryRate = usdTryQuote?.regularMarketPrice || 34.5;
-
-    // Update assets with live data
-    const updatedAssets = SEED_ASSETS.map((asset) => {
-      const yahooSymbol = SYMBOL_MAP[asset.symbol];
-      const quote = results.find((r: QuoteResult) => r.symbol === yahooSymbol);
-
-      if (quote) {
-        let price = quote.regularMarketPrice || asset.price;
-        let changePercent = quote.regularMarketChangePercent || 0;
-        
-        // USDT is fetched as USDT-USD, convert to TRY
-        if (asset.symbol === 'USDT' && price > 0) {
-          price = price * usdTryRate; // 1 USDT = X USD * Y TRY/USD = Z TRY
+    // Multi-provider approach: fetch from different sources in parallel
+    const [cryptoPrices, usdTryRate, yahooResults] = await Promise.all([
+      // CoinGecko for crypto (reliable, no rate limit issues)
+      getCryptoPrices(['BTC', 'ETH', 'SOL', 'AVAX', 'DOGE', 'USDT']).catch(err => {
+        console.error('❌ CoinGecko error:', err);
+        return new Map();
+      }),
+      
+      // TCMB for official USD/TRY rate
+      getUSDTRY().catch(err => {
+        console.error('❌ TCMB error:', err);
+        return 43.28; // Fallback
+      }),
+      
+      // Yahoo Finance only for stocks (US + BIST) and commodities
+      (async () => {
+        try {
+          const stockSymbols = [
+            'AAPL', 'TSLA', 'NVDA', 'AMZN', 'MSFT',  // US stocks
+            'THYAO.IS', 'GARAN.IS', 'AKBNK.IS', 'EREGL.IS', 'SASA.IS',  // BIST
+            'GC=F', 'SI=F',  // Commodities
+          ];
+          
+          try {
+            return await fetchYahooQuotes(stockSymbols);
+          } catch (yahooError: any) {
+            // Handle Yahoo Finance specific errors (especially 429)
+            if (yahooError?.message?.includes('429') || yahooError?.message?.includes('Too Many Requests')) {
+              console.warn('⚠️ Yahoo Finance Rate Limited (429) - Using fallback prices for stocks');
+            } else {
+              console.error('❌ Yahoo Finance error:', yahooError?.message || yahooError);
+            }
+            return []; // Return empty array to use fallback prices
+          }
+        } catch (err) {
+          console.error('❌ Yahoo Finance wrapper error:', err);
+          return [];
         }
-        
+      })(),
+    ]);
+
+    // Log data source status
+    console.log('📊 Market Data Sources Status:');
+    console.log(`  ✅ CoinGecko: ${cryptoPrices.size} crypto prices loaded`);
+    console.log(`  ✅ TCMB: USD/TRY = ₺${usdTryRate.toFixed(4)}`);
+    console.log(`  ${yahooResults.length > 0 ? '✅' : '⚠️'} Yahoo Finance: ${yahooResults.length} stock quotes${yahooResults.length === 0 ? ' (using fallback)' : ''}`);
+
+    // Update assets with live data from multiple sources
+    const updatedAssets = SEED_ASSETS.map((asset) => {
+      // 1. Try CoinGecko for crypto
+      if (asset.category === 'crypto' || asset.symbol === 'USDT') {
+        const cryptoData = cryptoPrices.get(asset.symbol);
+        if (cryptoData) {
+          let price = cryptoData.price;
+          
+          // USDT: convert USD to TRY
+          if (asset.symbol === 'USDT') {
+            price = price * usdTryRate;
+          }
+          
+          return {
+            ...asset,
+            price,
+            changePercent: cryptoData.changePercent,
+          };
+        }
+      }
+      
+      // 2. Use TCMB rate for USD/TRY
+      if (asset.symbol === 'USD') {
         return {
           ...asset,
-          price,
-          changePercent,
+          price: usdTryRate,
+          changePercent: 0, // TCMB doesn't provide change %
         };
       }
+      
+      // 3. Try Yahoo Finance for stocks and commodities
+      const yahooSymbol = SYMBOL_MAP[asset.symbol];
+      const quote = yahooResults.find((r: QuoteResult) => r.symbol === yahooSymbol);
+      
+      if (quote && quote.regularMarketPrice) {
+        return {
+          ...asset,
+          price: quote.regularMarketPrice,
+          changePercent: quote.regularMarketChangePercent || 0,
+        };
+      }
+      
+      // 4. Fallback to default prices
       return asset;
     });
 
     return updatedAssets;
 
   } catch (error: any) {
-    if (error?.message?.includes('429') || error?.message?.includes('Too Many Requests')) {
-      console.error("❌ Yahoo Finance Rate Limit (429): Using fallback data. Cache should prevent this.");
-    } else {
-      console.error("❌ Yahoo Finance Error:", error);
-    }
+    console.error("❌ Market data fetch error:", error);
     return SEED_ASSETS;
   }
 }

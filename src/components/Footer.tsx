@@ -6,7 +6,7 @@ export default function Footer() {
           © 2024 Midas Menkul Değerler A.Ş. Tüm hakları saklıdır.
         </p>
         <p className="text-[10px] text-gray-400 dark:text-text-muted/70 max-w-2xl mx-auto">
-          Piyasa verileri Yahoo Finance tarafından sağlanmaktadır ve Borsa İstanbul verileri 15 dakika gecikmelidir. Kripto varlıklar anlıktır.
+          Kripto fiyatları CoinGeck API, döviz kurları TCMB, hisse senedi verileri Yahoo Finance tarafından sağlanmaktadır. BIST verileri 15 dakika gecikmelidir.
         </p>
       </div>
     </footer>
