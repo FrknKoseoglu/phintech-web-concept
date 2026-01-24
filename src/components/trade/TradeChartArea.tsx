@@ -1,28 +1,11 @@
 "use client";
 
-import { useState, useEffect, useTransition, useMemo } from "react";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  ComposedChart,
-  Bar,
-} from "recharts";
+import { useState, useEffect, useTransition } from "react";
 import { LineChart, CandlestickChart } from "lucide-react";
 import type { Asset } from "@/types";
 import { getAssetHistory, type ChartDataPoint } from "@/actions/market";
 import { cn } from "@/lib/utils";
-
-// OHLC data type for candlestick
-interface OHLCDataPoint extends ChartDataPoint {
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-}
+import FinancialChart, { type ChartDataPoint as FinancialChartDataPoint } from "../charts/FinancialChart";
 
 interface TradeChartAreaProps {
   asset: Asset;
@@ -33,14 +16,15 @@ const timeRanges = [
   { label: "1H", value: "1wk" as const },
   { label: "1A", value: "1mo" as const },
   { label: "3A", value: "3mo" as const },
+  { label: "1 Yıl", value: "1y" as const },
 ];
 
 export default function TradeChartArea({ asset }: TradeChartAreaProps) {
   const isPositive = asset.changePercent >= 0;
-  const [activeRange, setActiveRange] = useState<"1d" | "1wk" | "1mo" | "3mo">("1mo");
+  const [activeRange, setActiveRange] = useState<"1d" | "1wk" | "1mo" | "3mo" | "1y">("1mo");
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [isPending, startTransition] = useTransition();
-  const [chartType, setChartType] = useState<"line" | "candle">("line");
+  const [chartType, setChartType] = useState<"line" | "candlestick">("candlestick");
 
   // Fetch chart data when symbol or range changes
   useEffect(() => {
@@ -50,112 +34,23 @@ export default function TradeChartArea({ asset }: TradeChartAreaProps) {
     });
   }, [asset.symbol, activeRange]);
 
-  // Format tooltip value
-  const formatTooltipValue = (value: number) => {
-    return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
-
-  // Format X axis label
-  const formatXAxis = (dateStr: string) => {
-    const date = new Date(dateStr);
-    if (activeRange === "1d") {
-      return date.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
-    }
-    return date.toLocaleDateString("tr-TR", { day: "2-digit", month: "short" });
-  };
-
-  // Custom tooltip
-  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ value: number; payload: ChartDataPoint }> }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0];
-      const date = new Date(data.payload.date);
-      return (
-        <div className="bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-[#2C2C2E] rounded-lg px-3 py-2 shadow-lg">
-          <p className="text-xs text-gray-500 dark:text-text-muted mb-1">
-            {date.toLocaleDateString("tr-TR", { 
-              day: "2-digit", 
-              month: "short",
-              year: activeRange === "3mo" ? "numeric" : undefined 
-            })}
-            {activeRange === "1d" && ` ${date.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}`}
-          </p>
-          <p className="text-sm font-bold text-gray-900 dark:text-white">
-            {formatTooltipValue(data.value)}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Convert price data to OHLC format for candlestick
-  const ohlcData = useMemo(() => {
-    if (chartData.length === 0) return [];
+  // Convert chartData to FinancialChart format
+  const financialChartData: FinancialChartDataPoint[] = chartData.map((point, i) => {
+    const price = point.price;
+    const variance = price * 0.015; // 1.5% variance for OHLC simulation
     
-    return chartData.map((point, i) => {
-      const price = point.price;
-      const variance = price * 0.005; // 0.5% variance for OHLC
-      
-      // Simulate OHLC from single price point
-      const open = i > 0 ? chartData[i - 1].price : price;
-      const high = price + Math.random() * variance;
-      const low = price - Math.random() * variance;
-      const close = price;
-      
-      return {
-        ...point,
-        open,
-        high: Math.max(open, high, low, close),
-        low: Math.min(open, high, low, close),
-        close,
-      } as OHLCDataPoint;
-    });
-  }, [chartData]);
-
-  const chartColor = isPositive ? "#05C46B" : "#FF3B30";
-  // Custom candlestick shape - fixed to properly receive OHLC data
-  const CandlestickBar = (props: any) => {
-    const { payload, x, y, width, height } = props;
+    const open = i > 0 ? chartData[i - 1].price : price;
+    const high = Math.max(open, price) + Math.random() * variance;
+    const low = Math.min(open, price) - Math.random() * variance;
     
-    if (!payload || !payload.open || !payload.close) return null;
-    
-    const { open, close, high, low } = payload;
-    const isUp = close >= open;
-    const color = isUp ? "#05C46B" : "#FF3B30";
-    
-    // Calculate Y positions (Y axis is inverted in charts)
-    const yScale = height / (Math.max(high, close, open, low) - Math.min(high, close, open, low) + 0.01);
-    const highY = y;
-    const lowY = y + height;
-    const topPrice = Math.max(open, close);
-    const bottomPrice = Math.min(open, close);
-    const bodyTop = y + (high - topPrice) * yScale;
-    const bodyHeight = Math.abs(close - open) * yScale || 2;
-    
-    return (
-      <g>
-        {/* Wick (high-low line) */}
-        <line
-          x1={x + width / 2}
-          y1={highY}
-          x2={x + width / 2}
-          y2={lowY}
-          stroke={color}
-          strokeWidth={1.5}
-        />
-        {/* Body (open-close rectangle) */}
-        <rect
-          x={x + 1}
-          y={bodyTop}
-          width={Math.max(width - 2, 1)}
-          height={Math.max(bodyHeight, 2)}
-          fill={color}
-          stroke={color}
-          strokeWidth={1.5}
-        />
-      </g>
-    );
-  };
+    return {
+      time: point.date,
+      open,
+      high: Math.max(open, high, low, price),
+      low: Math.min(open, high, low, price),
+      close: price,
+    };
+  });
 
   return (
     <div className="h-full flex flex-col relative bg-white dark:bg-black">
@@ -193,10 +88,10 @@ export default function TradeChartArea({ asset }: TradeChartAreaProps) {
             <LineChart className="w-4 h-4" />
           </button>
           <button 
-            onClick={() => setChartType("candle")}
+            onClick={() => setChartType("candlestick")}
             className={cn(
               "p-2 rounded-lg transition-all",
-              chartType === "candle" ? "text-primary bg-primary/15" : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              chartType === "candlestick" ? "text-primary bg-primary/15" : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
             )}
           >
             <CandlestickChart className="w-4 h-4" />
@@ -212,90 +107,26 @@ export default function TradeChartArea({ asset }: TradeChartAreaProps) {
       </div>
 
       {/* Chart Area */}
-      <div
-        className="flex-1 relative p-4 overflow-hidden"
-        style={{
-          backgroundImage: `linear-gradient(to right, rgba(128, 128, 128, 0.05) 1px, transparent 1px),
-                           linear-gradient(to bottom, rgba(128, 128, 128, 0.05) 1px, transparent 1px)`,
-          backgroundSize: "40px 40px",
-        }}
-      >
-        {chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
-            {chartType === "line" ? (
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="tradeChartGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={chartColor} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="date"
-                  tickFormatter={formatXAxis}
-                  tick={{ fill: "#8E8E93", fontSize: 10 }}
-                  axisLine={{ stroke: "#2C2C2E" }}
-                  tickLine={false}
-                  interval="preserveStartEnd"
-                  minTickGap={60}
-                />
-                <YAxis
-                  domain={["dataMin - 100", "dataMax + 100"]}
-                  tick={{ fill: "#8E8E93", fontSize: 10 }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(value: number) => `$${(value / 1000).toFixed(1)}K`}
-                  width={55}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Area
-                  type="monotone"
-                  dataKey="price"
-                  stroke={chartColor}
-                  strokeWidth={2}
-                  fill="url(#tradeChartGradient)"
-                  animationDuration={500}
-                />
-              </AreaChart>
-            ) : (
-              <ComposedChart data={ohlcData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <XAxis
-                  dataKey="date"
-                  tickFormatter={formatXAxis}
-                  tick={{ fill: "#8E8E93", fontSize: 10 }}
-                  axisLine={{ stroke: "#2C2C2E" }}
-                  tickLine={false}
-                  interval="preserveStartEnd"
-                  minTickGap={60}
-                />
-                <YAxis
-                  domain={["dataMin - 100", "dataMax + 100"]}
-                  tick={{ fill: "#8E8E93", fontSize: 10 }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(value: number) => `$${(value / 1000).toFixed(1)}K`}
-                  width={55}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar
-                  dataKey="high"
-                  shape={<CandlestickBar />}
-                  animationDuration={300}
-                />
-              </ComposedChart>
-            )}
-          </ResponsiveContainer>
-        ) : (
+      <div className="flex-1 relative overflow-hidden">
+        {chartData.length === 0 ? (
           <div className="flex items-center justify-center h-full text-text-muted">
             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2" />
             Grafik yükleniyor...
+          </div>
+        ) : (
+          <div className="h-full p-4">
+            <FinancialChart
+              data={financialChartData}
+              type={chartType}
+              height={500}
+            />
           </div>
         )}
 
         {/* Current Price Indicator */}
         <div
           className={cn(
-            "absolute right-0 top-[25%] text-white text-xs px-3 py-1.5 rounded-l-xl shadow-lg font-bold",
+            "absolute right-0 top-[25%] text-white text-xs px-3 py-1.5 rounded-l-xl shadow-lg font-bold z-10",
             isPositive ? "bg-success" : "bg-danger"
           )}
         >
@@ -303,7 +134,7 @@ export default function TradeChartArea({ asset }: TradeChartAreaProps) {
         </div>
 
         {/* Watermark */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none z-0">
           <div className="text-[100px] font-bold text-gray-500">MIDAS</div>
         </div>
       </div>

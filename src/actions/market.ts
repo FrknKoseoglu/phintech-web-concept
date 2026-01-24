@@ -156,7 +156,7 @@ const fetchYahooChart = unstable_cache(
  */
 export async function getAssetHistory(
   symbol: string,
-  range: '1d' | '1wk' | '1mo' | '3mo' = '1mo'
+  range: '1d' | '1wk' | '1mo' | '3mo' | '1y' = '1mo'
 ): Promise<ChartDataPoint[]> {
   try {
     const yahooSymbol = SYMBOL_MAP[symbol] || symbol;
@@ -186,6 +186,10 @@ export async function getAssetHistory(
         break;
       case '3mo':
         period1 = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        interval = '1d';
+        break;
+      case '1y':
+        period1 = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
         interval = '1d';
         break;
     }
@@ -225,7 +229,7 @@ export async function getAssetHistory(
 // Generate fallback data for demo/offline - uses current asset price
 function generateFallbackData(range: string, symbol: string, currentPrice: number): ChartDataPoint[] {
   const now = Date.now();
-  const points = range === '1d' ? 24 : range === '1wk' ? 7 : 30;
+  const points = range === '1d' ? 24 : range === '1wk' ? 7 : range === '3mo' ? 90 : range === '1y' ? 365 : 30;
   const msPerPoint = range === '1d' ? 3600000 : 86400000;
   
   // Start from current price instead of hardcoded 42000

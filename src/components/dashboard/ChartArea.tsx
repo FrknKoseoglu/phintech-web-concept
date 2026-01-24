@@ -1,17 +1,10 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
 import type { Asset } from "@/types";
 import { getAssetHistory, type ChartDataPoint } from "@/actions/market";
 import { cn } from "@/lib/utils";
+import FinancialChart, { type ChartDataPoint as FinancialChartDataPoint } from "../charts/FinancialChart";
 
 interface ChartAreaProps {
   asset?: Asset;
@@ -41,45 +34,23 @@ export default function ChartArea({ asset }: ChartAreaProps) {
     });
   }, [symbol, activeRange]);
 
-  // Format tooltip value
-  const formatTooltipValue = (value: number) => {
-    return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
-
-  // Format X axis label
-  const formatXAxis = (dateStr: string) => {
-    const date = new Date(dateStr);
-    if (activeRange === "1d") {
-      return date.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
-    }
-    return date.toLocaleDateString("tr-TR", { day: "2-digit", month: "short" });
-  };
-
-  // Custom tooltip
-  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ value: number; payload: ChartDataPoint }> }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0];
-      const date = new Date(data.payload.date);
-      return (
-        <div className="bg-[#1C1C1E] border border-[#2C2C2E] rounded-lg px-3 py-2 shadow-lg">
-          <p className="text-xs text-text-muted mb-1">
-            {date.toLocaleDateString("tr-TR", { 
-              day: "2-digit", 
-              month: "short",
-              year: activeRange === "3mo" ? "numeric" : undefined 
-            })}
-            {activeRange === "1d" && ` ${date.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}`}
-          </p>
-          <p className="text-sm font-bold text-white">
-            {formatTooltipValue(data.value)}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const chartColor = isPositive ? "#05C46B" : "#FF3B30";
+  // Convert chartData to FinancialChart format
+  const financialChartData: FinancialChartDataPoint[] = chartData.map((point, i) => {
+    const price = point.price;
+    const variance = price * 0.015; // 1.5% variance for OHLC simulation
+    
+    const open = i > 0 ? chartData[i - 1].price : price;
+    const high = Math.max(open, price) + Math.random() * variance;
+    const low = Math.min(open, price) - Math.random() * variance;
+    
+    return {
+      time: point.date,
+      open,
+      high: Math.max(open, high, low, price),
+      low: Math.min(open, high, low, price),
+      close: price,
+    };
+  });
 
   return (
     <div className="bg-white dark:bg-black rounded-2xl border border-gray-200 dark:border-gray-800 flex-1 min-h-[400px] flex flex-col overflow-hidden">
@@ -132,42 +103,11 @@ export default function ChartArea({ asset }: ChartAreaProps) {
         )}
         
         {chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={chartColor} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <XAxis
-                dataKey="date"
-                tickFormatter={formatXAxis}
-                tick={{ fill: "#8E8E93", fontSize: 10 }}
-                axisLine={{ stroke: "#2C2C2E" }}
-                tickLine={false}
-                interval="preserveStartEnd"
-                minTickGap={50}
-              />
-              <YAxis
-                domain={["dataMin - 100", "dataMax + 100"]}
-                tick={{ fill: "#8E8E93", fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(value) => `$${(value / 1000).toFixed(1)}K`}
-                width={60}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Area
-                type="monotone"
-                dataKey="price"
-                stroke={chartColor}
-                strokeWidth={2}
-                fill="url(#colorPrice)"
-                animationDuration={500}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          <FinancialChart
+            data={financialChartData}
+            type="line"
+            height={350}
+          />
         ) : (
           <div className="flex items-center justify-center h-full text-text-muted">
             Grafik yükleniyor...
@@ -177,7 +117,7 @@ export default function ChartArea({ asset }: ChartAreaProps) {
         {/* Current Price Indicator */}
         <div
           className={cn(
-            "absolute right-6 top-1/4 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg font-bold",
+            "absolute right-6 top-1/4 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg font-bold z-20",
             isPositive ? "bg-success" : "bg-danger"
           )}
         >
