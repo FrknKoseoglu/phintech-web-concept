@@ -47,7 +47,7 @@ function getAssetIcon(symbol: string) {
 }
 
 // Format currency based on asset currency type
-function formatCurrency(amount: number, currency: 'USD' | 'TRY' = 'USD'): string {
+function formatCurrency(amount: number, currency: 'USD' | 'TRY' | 'USDT' = 'USD'): string {
   if (currency === 'TRY') {
     return new Intl.NumberFormat('tr-TR', { 
       style: 'currency', 
@@ -55,6 +55,9 @@ function formatCurrency(amount: number, currency: 'USD' | 'TRY' = 'USD'): string
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(amount);
+  }
+  if (currency === 'USDT') {
+    return `₮${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
   return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }

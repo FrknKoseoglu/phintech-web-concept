@@ -1,6 +1,7 @@
 "use server";
 
-import { auth } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
@@ -10,7 +11,7 @@ import { revalidatePath } from "next/cache";
  * Adds 90,000 TL and creates transaction record
  */
 export async function refillBalance() {
-  const session = await auth();
+  const session = await getServerSession(authOptions);
 
   if (!session?.user?.email) {
     return { error: "Oturum açmanız gerekiyor" };
@@ -20,7 +21,7 @@ export async function refillBalance() {
     const result = await prisma.$transaction(async (tx) => {
       // Get current user balance
       const user = await tx.user.findUnique({
-        where: { email: session.user.email },
+        where: { email: session.user!.email! },
         select: { id: true, balance: true },
       });
 

@@ -20,7 +20,7 @@ interface AssetListProps {
 }
 
 // Format price based on currency
-function formatPrice(price: number, currency: 'USD' | 'TRY'): string {
+function formatPrice(price: number, currency: 'USD' | 'TRY' | 'USDT'): string {
   if (currency === 'TRY') {
     return new Intl.NumberFormat('tr-TR', { 
       style: 'currency', 
@@ -28,6 +28,9 @@ function formatPrice(price: number, currency: 'USD' | 'TRY'): string {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(price);
+  }
+  if (currency === 'USDT') {
+    return `₮${price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
   if (price >= 1000) {
     return `$${price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

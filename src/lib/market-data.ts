@@ -19,7 +19,7 @@ export const getMarketOverview = unstable_cache(
   async (): Promise<MarketOverview> => {
     try {
       // Fetch Gold (GC=F) data as representative commodity
-      const goldQuote = await yahooFinance.quote("GC=F");
+      const goldQuote = await yahooFinance.quote("GC=F") as any; // Yahoo Finance v2 type compatibility
 
       return {
         volume24h: goldQuote.regularMarketVolume || null,

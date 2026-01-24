@@ -42,8 +42,8 @@ async function compareRealPrices() {
     );
     const tcmbXml = await tcmbResponse.text();
     
-    // Simple regex to extract USD rate
-    const usdMatch = tcmbXml.match(/<Currency.*?CurrencyCode="USD".*?>(.*?)<\/Currency>/s);
+    // Simple regex to extract USD rate (ES5 compatible - no 's' flag)
+    const usdMatch = tcmbXml.match(/<Currency[\s\S]*?CurrencyCode="USD"[\s\S]*?>([\s\S]*?)<\/Currency>/);
     if (usdMatch) {
       const forexSellingMatch = usdMatch[1].match(/<ForexSelling>([\d.]+)<\/ForexSelling>/);
       if (forexSellingMatch) {
