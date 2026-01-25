@@ -5,7 +5,7 @@
 /**
  * Asset category types.
  */
-export type AssetCategory = "crypto" | "stock" | "commodity" | "currency";
+export type AssetCategory = "crypto" | "stock" | "commodity" | "currency" | "etf";
 
 /**
  * Represents a tradable asset in the market.

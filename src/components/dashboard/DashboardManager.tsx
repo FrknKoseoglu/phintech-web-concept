@@ -13,7 +13,7 @@ import MarketStats from "./MarketStats";
 
 interface DashboardManagerProps {
   marketData: Asset[];
-  user: User;
+  user: User | null; // Allow null for guest users
   children?: React.ReactNode; // For NewsFeed (Server Component)
 }
 
@@ -24,11 +24,21 @@ export default function DashboardManager({ marketData, user, children }: Dashboa
   // Get the selected asset from market data
   const selectedAsset = marketData.find((a) => a.symbol === selectedSymbol) || marketData[0];
 
+  // Guest mode defaults
+  const guestUser: User = {
+    id: "guest",
+    balance: 0,
+    portfolio: [],
+    favorites: [],
+  };
+
+  const activeUser = user || guestUser;
+
   // Use centralized calculation for proper TRY/USD conversion
   const { cashBalanceUsd, holdingsValue, profitLoss } = useMemo(() => {
     const usdTryRate = getUsdTryRate(marketData);
-    const netWorth = calculateNetWorth(user.balance, user.portfolio, marketData, usdTryRate);
-    const { totalPL } = calculateProfitLoss(user.portfolio, marketData, usdTryRate);
+    const netWorth = calculateNetWorth(activeUser.balance, activeUser.portfolio, marketData, usdTryRate);
+    const { totalPL } = calculateProfitLoss(activeUser.portfolio, marketData, usdTryRate);
     
     // Total cash = TRY converted to USD + USD + USDT
     const totalCashUsd = netWorth.cashTryInUsd + netWorth.cashUsd + netWorth.cashUsdt;
@@ -38,7 +48,7 @@ export default function DashboardManager({ marketData, user, children }: Dashboa
       holdingsValue: netWorth.investmentsValueUsd, 
       profitLoss: totalPL 
     };
-  }, [user.portfolio, user.balance, marketData]);
+  }, [activeUser.portfolio, activeUser.balance, marketData]);
 
   // Update symbol when marketData changes (e.g., on navigation)
   useEffect(() => {
@@ -57,7 +67,7 @@ export default function DashboardManager({ marketData, user, children }: Dashboa
         {/* Left Column - Portfolio & Watchlist */}
         <div className="lg:col-span-3 flex flex-col gap-6">
           {/* Show PortfolioSummary only when logged in */}
-          {session && (
+          {session && user && (
             <PortfolioSummary 
               balance={cashBalanceUsd}
               holdingsValue={holdingsValue}
@@ -68,7 +78,7 @@ export default function DashboardManager({ marketData, user, children }: Dashboa
             assets={marketData} 
             selectedSymbol={selectedSymbol}
             onSelectAsset={handleAssetSelect}
-            favorites={user.favorites}
+            favorites={activeUser.favorites}
           />
         </div>
 
@@ -87,10 +97,10 @@ export default function DashboardManager({ marketData, user, children }: Dashboa
         <div className="lg:col-span-3 flex flex-col gap-6">
           <QuickTrade
             selectedAsset={selectedAsset}
-            tryBalance={user.balance}
-            usdBalance={user.portfolio.find(p => p.symbol === 'USD')?.quantity || 0}
-            usdtBalance={user.portfolio.find(p => p.symbol === 'USDT')?.quantity || 0}
-            ownedQuantity={user.portfolio.find(p => p.symbol === selectedSymbol)?.quantity || 0}
+            tryBalance={activeUser.balance}
+            usdBalance={activeUser.portfolio.find(p => p.symbol === 'USD')?.quantity || 0}
+            usdtBalance={activeUser.portfolio.find(p => p.symbol === 'USDT')?.quantity || 0}
+            ownedQuantity={activeUser.portfolio.find(p => p.symbol === selectedSymbol)?.quantity || 0}
           />
           <OrderBook asset={selectedAsset} />
         </div>
@@ -98,3 +108,4 @@ export default function DashboardManager({ marketData, user, children }: Dashboa
     </div>
   );
 }
+

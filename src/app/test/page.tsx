@@ -17,14 +17,18 @@ export default async function TestPage() {
       </h1>
 
       {/* User Data */}
-      <section className="mb-8 p-6 bg-midas-dark rounded-lg border border-midas-gold/20">
+      <div className="mb-8 bg-midas-charcoal p-6 rounded-lg shadow-lg">
         <h2 className="text-xl font-semibold text-midas-yellow mb-4">User Data</h2>
-        <div className="text-gray-300 font-mono text-sm">
-          <p>ID: {user.id}</p>
-          <p>Balance: ${user.balance.toLocaleString()}</p>
-          <p>Portfolio Items: {user.portfolio.length}</p>
-        </div>
-      </section>
+        {user ? (
+          <div className="text-gray-300 font-mono text-sm">
+            <p>ID: {user.id}</p>
+            <p>Balance: ${user.balance.toLocaleString()}</p>
+            <p>Portfolio Items: {user.portfolio.length}</p>
+          </div>
+        ) : (
+          <p className="text-gray-400">No user data (not logged in)</p>
+        )}
+      </div>
 
       {/* Market Data - First Call */}
       <section className="mb-8 p-6 bg-midas-dark rounded-lg border border-midas-gold/20">

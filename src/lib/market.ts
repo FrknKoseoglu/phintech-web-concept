@@ -27,15 +27,26 @@ export const SYMBOL_MAP: Record<string, string> = {
   'NVDA': 'NVDA',
   'AMZN': 'AMZN',
   'MSFT': 'MSFT',
+  // ETFs
+  'SPY': 'SPY',     // S&P 500 ETF
+  'QQQ': 'QQQ',     // Nasdaq-100 ETF
+  'VTI': 'VTI',     // Total Market ETF
+  'VOO': 'VOO',     // Vanguard S&P 500 ETF
   // BIST (Istanbul Stock Exchange)
   'THYAO': 'THYAO.IS',
   'GARAN': 'GARAN.IS',
   'AKBNK': 'AKBNK.IS',
   'EREGL': 'EREGL.IS',
   'SASA': 'SASA.IS',
+  'ASELS': 'ASELS.IS',  // Aselsan
+  'TUPRS': 'TUPRS.IS',  // Tüpraş
+  'KCHOL': 'KCHOL.IS',  // Koç Holding
   // Commodities
   'XAU': 'GC=F',    // Gold (USD)
   'XAG': 'SI=F',    // Silver (USD)
+  'CL': 'CL=F',     // Crude Oil
+  'NG': 'NG=F',     // Natural Gas
+  'HG': 'HG=F',     // Copper
   // Currencies (for exchange)
   'USD': 'TRY=X',     // USD price in TRY
   'USDT': 'USDT-USD', // USDT price in USD (will convert to TRY)
@@ -61,15 +72,26 @@ const ASSET_META: Record<string, AssetMeta> = {
   'NVDA': { name: 'NVIDIA Corp.', category: 'stock', logo: '/logos/nvda.svg' },
   'AMZN': { name: 'Amazon.com', category: 'stock', logo: '/logos/amzn.svg' },
   'MSFT': { name: 'Microsoft Corp.', category: 'stock', logo: '/logos/msft.svg' },
+  // ETFs
+  'SPY': { name: 'SPDR S&P 500 ETF', category: 'etf', logo: '/logos/spy.svg' },
+  'QQQ': { name: 'Invesco QQQ Trust', category: 'etf', logo: '/logos/qqq.svg' },
+  'VTI': { name: 'Vanguard Total Market ETF', category: 'etf', logo: '/logos/vti.svg' },
+  'VOO': { name: 'Vanguard S&P 500 ETF', category: 'etf', logo: '/logos/voo.svg' },
   // BIST
   'THYAO': { name: 'Türk Hava Yolları', category: 'stock', logo: '/logos/thy.svg' },
   'GARAN': { name: 'Garanti BBVA', category: 'stock', logo: '/logos/garan.svg' },
   'AKBNK': { name: 'Akbank', category: 'stock', logo: '/logos/akbnk.svg' },
   'EREGL': { name: 'Ereğli Demir Çelik', category: 'stock', logo: '/logos/eregl.svg' },
   'SASA': { name: 'SASA Polyester', category: 'stock', logo: '/logos/sasa.svg' },
+  'ASELS': { name: 'Aselsan', category: 'stock', logo: '/logos/asels.svg' },
+  'TUPRS': { name: 'Tüpraş', category: 'stock', logo: '/logos/tuprs.svg' },
+  'KCHOL': { name: 'Koç Holding', category: 'stock', logo: '/logos/kchol.svg' },
   // Commodities
   'XAU': { name: 'Altın (Ons)', category: 'commodity', logo: '/logos/gold.svg' },
   'XAG': { name: 'Gümüş (Ons)', category: 'commodity', logo: '/logos/silver.svg' },
+  'CL': { name: 'Petrol (Brent)', category: 'commodity', logo: '/logos/oil.svg' },
+  'NG': { name: 'Doğalgaz', category: 'commodity', logo: '/logos/gas.svg' },
+  'HG': { name: 'Bakır', category: 'commodity', logo: '/logos/copper.svg' },
   // Currencies
   'USD': { name: 'Amerikan Doları', category: 'currency', logo: '/logos/usd.svg' },
   'USDT': { name: 'Tether', category: 'currency', logo: '/logos/usdt.svg' },
@@ -87,13 +109,23 @@ const FALLBACK_PRICES: Record<string, number> = {
   'NVDA': 825,    // Estimated Jan 2026
   'AMZN': 192,    // Estimated Jan 2026
   'MSFT': 420,    // Estimated Jan 2026
+  'SPY': 475,     // S&P 500 ETF estimated
+  'QQQ': 420,     // Nasdaq ETF estimated
+  'VTI': 245,     // Total Market ETF estimated
+  'VOO': 445,     // S&P 500 ETF estimated
   'THYAO': 260,   // BIST stocks (will use live data)
   'GARAN': 55,
   'AKBNK': 45,
   'EREGL': 38,
   'SASA': 62,
+  'ASELS': 72,    // Aselsan
+  'TUPRS': 138,   // Tüpraş
+  'KCHOL': 82,    // Koç Holding
   'XAU': 2750,    // Gold estimated ~$2750/oz
   'XAG': 32,      // Silver estimated ~$32/oz
+  'CL': 75,       // Crude oil ~$75/barrel
+  'NG': 3.5,      // Natural gas
+  'HG': 4.2,      // Copper
   'USD': 43.28,   // ✅ TCMB official rate
   'USDT': 43.26,  // ✅ Updated (1 USDT ≈ 1 USD)
 };
@@ -132,8 +164,9 @@ const SEED_ASSETS: Asset[] = Object.entries(ASSET_META).map(([symbol, meta]) => 
 export const MARKET_CATEGORIES = {
   crypto: ['BTC', 'ETH', 'SOL', 'AVAX', 'DOGE'],
   abd: ['AAPL', 'TSLA', 'NVDA', 'AMZN', 'MSFT'],
-  bist: ['THYAO', 'GARAN', 'AKBNK', 'EREGL', 'SASA'],
-  commodity: ['XAU', 'XAG'],
+  etf: ['SPY', 'QQQ', 'VTI', 'VOO'],
+  bist: ['THYAO', 'GARAN', 'AKBNK', 'EREGL', 'SASA', 'ASELS', 'TUPRS', 'KCHOL'],
+  commodity: ['XAU', 'XAG', 'CL', 'NG', 'HG'],
   // USD and USDT are searchable but not shown in default tabs
 };
 
@@ -173,8 +206,10 @@ export async function getMarketData(): Promise<Asset[]> {
         try {
           const stockSymbols = [
             'AAPL', 'TSLA', 'NVDA', 'AMZN', 'MSFT',  // US stocks
+            'SPY', 'QQQ', 'VTI', 'VOO',  // ETFs
             'THYAO.IS', 'GARAN.IS', 'AKBNK.IS', 'EREGL.IS', 'SASA.IS',  // BIST
-            'GC=F', 'SI=F',  // Commodities
+            'ASELS.IS', 'TUPRS.IS', 'KCHOL.IS',  // More BIST
+            'GC=F', 'SI=F', 'CL=F', 'NG=F', 'HG=F',  // Commodities
           ];
           
           try {

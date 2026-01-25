@@ -1,12 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { getAssetBySymbol, SYMBOL_MAP } from "@/lib/market";
 import prisma from "@/lib/prisma";
 import type { TradeResult, Asset } from "@/types";
-
-// Default user ID for demo (in production, get from session)
-const DEMO_USER_ID = "demo_user_001";
 
 // =============================================================================
 // TRIPLE-CURRENCY SYSTEM
@@ -53,35 +52,7 @@ async function getUsdTryRate(): Promise<number> {
   return 34.5; // Fallback rate
 }
 
-/**
- * Gets the current user from the database, creating one if it doesn't exist.
- */
-async function getOrCreateUser() {
-  let user = await prisma.user.findUnique({
-    where: { id: DEMO_USER_ID },
-    include: {
-      portfolio: true,
-    },
-  });
 
-  // Create demo user if not exists
-  if (!user) {
-    user = await prisma.user.create({
-      data: {
-        id: DEMO_USER_ID,
-        email: "demo@midas.app",
-        name: "Demo User",
-        balance: 100000, // 100k TL starting bonus
-        favorites: ["BTC", "ETH", "AAPL"],
-      },
-      include: {
-        portfolio: true,
-      },
-    });
-  }
-
-  return user;
-}
 
 /**
  * INTERNAL SYSTEM TRADE FUNCTION
@@ -345,15 +316,15 @@ export async function executeTrade(
   quantity: number,
   type: "BUY" | "SELL"
 ): Promise<TradeResult> {
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user?.id) {
+    return { success: false, message: "Lütfen giriş yapın" };
+  }
+
   try {
-    // In production, we would check auth() here
-    // For demo mode, we use DEMO_USER_ID
-    
-    // Ensure demo user exists
-    await getOrCreateUser();
-    
-    // Execute the trade using the system function
-    const result = await executeSystemTrade(DEMO_USER_ID, symbol, quantity, type);
+    // Execute the trade using the system function with user's ID
+    const result = await executeSystemTrade(session.user.id, symbol, quantity, type);
     
     // Revalidate cached pages on success
     if (result.success) {

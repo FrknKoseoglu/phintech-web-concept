@@ -1,12 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { getAssetBySymbol } from "@/lib/market";
 import type { LimitOrder } from "@/types";
-
-// Default user ID for demo (in production, get from session)
-const DEMO_USER_ID = "demo_user_001";
 
 /**
  * Result of a limit order operation.
@@ -29,6 +28,12 @@ export async function createLimitOrder(data: {
   targetPrice: number;
   type: "BUY" | "SELL";
 }): Promise<LimitOrderResult> {
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user?.id) {
+    return { success: false, message: "Lütfen giriş yapın" };
+  }
+
   try {
     const { symbol, quantity, amount, targetPrice, type } = data;
 
@@ -66,7 +71,7 @@ export async function createLimitOrder(data: {
     // ============ CREATE LIMIT ORDER ============
     const order = await prisma.limitOrder.create({
       data: {
-        userId: DEMO_USER_ID,
+        userId: session.user.id,
         symbol: symbol.toUpperCase(),
         quantity: quantity || null,
         amount: amount || null,
@@ -112,6 +117,12 @@ export async function createLimitOrder(data: {
  * Cancel a pending limit order.
  */
 export async function cancelLimitOrder(orderId: string): Promise<LimitOrderResult> {
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user?.id) {
+    return { success: false, message: "Lütfen giriş yapın" };
+  }
+
   try {
     if (!orderId) {
       return { success: false, message: "Geçersiz talimat ID" };
@@ -126,8 +137,8 @@ export async function cancelLimitOrder(orderId: string): Promise<LimitOrderResul
       return { success: false, message: "Talimat bulunamadı" };
     }
 
-    // Verify ownership (in demo mode, all orders belong to DEMO_USER_ID)
-    if (order.userId !== DEMO_USER_ID) {
+    // Verify ownership
+    if (order.userId !== session.user.id) {
       return { success: false, message: "Bu talimatı iptal etme yetkiniz yok" };
     }
 
@@ -173,9 +184,15 @@ export async function cancelLimitOrder(orderId: string): Promise<LimitOrderResul
  * Get all limit orders for the current user.
  */
 export async function getUserLimitOrders(): Promise<LimitOrder[]> {
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user?.id) {
+    return [];
+  }
+
   try {
     const orders = await prisma.limitOrder.findMany({
-      where: { userId: DEMO_USER_ID },
+      where: { userId: session.user.id },
       orderBy: { createdAt: "desc" },
     });
 
@@ -201,10 +218,16 @@ export async function getUserLimitOrders(): Promise<LimitOrder[]> {
  * Get pending limit orders count for the current user.
  */
 export async function getPendingOrdersCount(): Promise<number> {
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user?.id) {
+    return 0;
+  }
+
   try {
     const count = await prisma.limitOrder.count({
       where: {
-        userId: DEMO_USER_ID,
+        userId: session.user.id,
         status: "PENDING",
       },
     });

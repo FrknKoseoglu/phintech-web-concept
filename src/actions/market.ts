@@ -6,12 +6,11 @@
 
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
-import type { Asset, User, Transaction, PortfolioItem } from "@/types";
-import { getMarketData, getAssetBySymbol, resetMarketPrices, SYMBOL_MAP } from "@/lib/market";
+import {getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import type { Asset, AssetCategory, User, Transaction, PortfolioItem } from "@/types";
+import { getMarketData, getAssetBySymbol, resetMarketPrices, SYMBOL_MAP, MARKET_CATEGORIES } from "@/lib/market";
 import prisma from "@/lib/prisma";
-
-// Default user ID for demo (in production, get from session)
-const DEMO_USER_ID = "demo_user_001";
 
 /**
  * Server Action: Fetches real market data from Yahoo Finance.
@@ -33,29 +32,25 @@ export const fetchAsset = cache(async (symbol: string): Promise<Asset | null> =>
 
 /**
  * Server Action: Fetches the current user data from the database.
+ * Returns null if user is not authenticated (for public pages like dashboard).
  */
-export async function fetchUser(): Promise<User> {
-  let user = await prisma.user.findUnique({
-    where: { id: DEMO_USER_ID },
+export async function fetchUser(): Promise<User | null> {
+  const session = await getServerSession(authOptions);
+  
+  // Return null for unauthenticated users (guest mode)
+  if (!session?.user?.id) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
     include: {
       portfolio: true,
     },
   });
 
-  // Create demo user if not exists
   if (!user) {
-    user = await prisma.user.create({
-      data: {
-        id: DEMO_USER_ID,
-        email: "demo@midas.app",
-        name: "Demo User",
-        balance: 100000, // $100k starting bonus
-        favorites: ["BTC", "ETH", "AAPL"],
-      },
-      include: {
-        portfolio: true,
-      },
-    });
+    return null;
   }
 
   // Transform to match User type
@@ -71,18 +66,25 @@ export async function fetchUser(): Promise<User> {
   };
 }
 
+
 /**
  * Server Action: Resets all user data to initial state.
  * Useful for testing and demo purposes.
  */
 export async function resetAllData(): Promise<{ success: boolean }> {
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized - Please login");
+  }
+
   try {
     // Delete all user's transactions and portfolio
     await prisma.$transaction([
-      prisma.transaction.deleteMany({ where: { userId: DEMO_USER_ID } }),
-      prisma.portfolioItem.deleteMany({ where: { userId: DEMO_USER_ID } }),
+      prisma.transaction.deleteMany({ where: { userId: session.user.id } }),
+      prisma.portfolioItem.deleteMany({ where: { userId: session.user.id } }),
       prisma.user.update({
-        where: { id: DEMO_USER_ID },
+        where: { id: session.user.id },
         data: {
           balance: 100000,
           favorites: ["BTC", "ETH", "AAPL"],
@@ -102,8 +104,14 @@ export async function resetAllData(): Promise<{ success: boolean }> {
  * Server Action: Fetches transactions from the database.
  */
 export async function fetchTransactions(): Promise<Transaction[]> {
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized - Please login");
+  }
+
   const transactions = await prisma.transaction.findMany({
-    where: { userId: DEMO_USER_ID },
+    where: { userId: session.user.id },
     orderBy: { date: "desc" },
     take: 100,
   });
@@ -260,4 +268,184 @@ function generateFallbackData(range: string, symbol: string, currentPrice: numbe
       timestamp: now - (points - i) * msPerPoint,
     };
   });
+}
+
+// ============================================
+// Infinite Scroll - Market List with Pagination
+// ============================================
+
+export interface MarketListResult {
+  assets: Asset[];
+  hasMore: boolean;
+  total: number;
+  page: number;
+}
+
+// Cached wrapper for market list data
+const fetchMarketListCached = unstable_cache(
+  async (category: string, page: number, limit: number) => {
+    const { getPaginatedSymbols } = await import('@/lib/constants/market-data');
+    const YahooFinance = (await import('yahoo-finance2')).default;
+    const { getCryptoPrices } = await import('@/lib/coingecko');
+    const { getUSDTRY } = await import('@/lib/tcmb');
+    
+    // Get paginated symbols from catalog
+    const { symbols, hasMore, total } = getPaginatedSymbols(
+      category as 'BIST' | 'US_STOCKS' | 'CRYPTO' | 'ETF',
+      page,
+      limit
+    );
+
+    if (symbols.length === 0) {
+      return { assets: [], hasMore: false, total: 0 };
+    }
+
+    // Determine data source based on category
+    let assets: Asset[] = [];
+
+    if (category === 'CRYPTO') {
+      // Use CoinGecko for crypto
+      try {
+        const cryptoSymbols = symbols.map(s => s.symbol.replace('-USD', ''));
+        const cryptoPrices = await getCryptoPrices(cryptoSymbols);
+        const usdTryRate = await getUSDTRY().catch(() => 43.28);
+
+        assets = symbols.map(item => {
+          const baseSymbol = item.symbol.replace('-USD', '');
+          const cryptoData = cryptoPrices.get(baseSymbol);
+          
+          return {
+            symbol: baseSymbol,
+            name: item.name,
+            price: cryptoData?.price || 0,
+            changePercent: cryptoData?.changePercent || 0,
+            logo: `/logos/${baseSymbol.toLowerCase()}.svg`,
+            category: 'crypto' as AssetCategory,
+            currency: 'USDT' as const,
+          };
+        });
+      } catch (error) {
+        console.error('❌ Failed to fetch crypto prices:', error);
+        // Return empty assets on error
+        assets = symbols.map(item => ({
+          symbol: item.symbol.replace('-USD', ''),
+          name: item.name,
+          price: 0,
+          changePercent: 0,
+          logo: `/logos/${item.symbol.replace('-USD', '').toLowerCase()}.svg`,
+          category: 'crypto' as AssetCategory,
+          currency: 'USDT' as const,
+        }));
+      }
+    } else {
+      // Use Yahoo Finance for stocks and ETFs
+      try {
+        const yahooFinance = new YahooFinance();
+        const yahooSymbols = symbols.map(s => s.symbol);
+        const quotesResponse = await yahooFinance.quote(yahooSymbols);
+        const quotes = Array.isArray(quotesResponse) ? quotesResponse : [quotesResponse];
+
+        assets = symbols.map(item => {
+          const quote = quotes.find((q: any) => q.symbol === item.symbol);
+
+          // Determine currency based on category and symbol
+          let currency: 'USD' | 'TRY' | 'USDT' = 'USD';
+          if (item.symbol.endsWith('.IS')) {
+            currency = 'TRY';
+          }
+
+          // Determine category
+          let assetCategory: AssetCategory = 'stock';
+          if (category === 'ETF') {
+            assetCategory = 'stock'; // ETFs use stock category
+          }
+
+          return {
+            symbol: item.symbol,
+            name: item.name,
+            price: quote?.regularMarketPrice || 0,
+            changePercent: quote?.regularMarketChangePercent || 0,
+            logo: `/logos/${item.symbol.replace('.IS', '').toLowerCase()}.svg`,
+            category: assetCategory,
+            currency,
+          };
+        });
+      } catch (error: any) {
+        if (error?.message?.includes('429')) {
+          console.warn('⚠️ Yahoo Finance Rate Limited (429) - Using fallback');
+        } else {
+          console.error('❌ Failed to fetch stock prices:', error);
+        }
+        
+        // Return symbols with zero prices on error
+        assets = symbols.map(item => ({
+          symbol: item.symbol,
+          name: item.name,
+          price: 0,
+          changePercent: 0,
+          logo: `/logos/${item.symbol.replace('.IS', '').toLowerCase()}.svg`,
+          category: 'stock' as AssetCategory,
+          currency: item.symbol.endsWith('.IS') ? 'TRY' as const : 'USD' as const,
+        }));
+      }
+    }
+
+    return { assets, hasMore, total };
+  },
+  ['market-list-paginated'],
+  {
+    revalidate: 60, // Cache for 60 seconds
+    tags: ['market-list'],
+  }
+);
+
+/**
+ * Server Action: Get paginated market list for infinite scroll.
+ * Fetches live prices from Yahoo Finance or CoinGecko based on category.
+ * 
+ * @param category - Market category (BIST, US_STOCKS, CRYPTO, ETF)
+ * @param page - Page number (1-indexed)
+ * @param limit - Items per page (default 10)
+ */
+export async function getMarketList(
+  category: 'BIST' | 'US_STOCKS' | 'CRYPTO' | 'ETF',
+  page: number = 1,
+  pageSize: number = 10,
+  searchQuery?: string
+): Promise<{ assets: Asset[]; hasMore: boolean }> {
+  try {
+    const allAssets = await getMarketData();
+    
+    // Filter by category or search query
+    let filtered = allAssets;
+
+    if (searchQuery && searchQuery.trim()) {
+      // Search across all categories
+      const query = searchQuery.toLowerCase().trim();
+      filtered = allAssets.filter((asset) => 
+        asset.symbol.toLowerCase().includes(query) ||
+        asset.name.toLowerCase().includes(query)
+      );
+    } else {
+      // Filter by category
+      filtered = allAssets.filter((asset) => {
+        if (category === 'BIST') return MARKET_CATEGORIES.bist.includes(asset.symbol);
+        if (category === 'US_STOCKS') return MARKET_CATEGORIES.abd.includes(asset.symbol);
+        if (category === 'CRYPTO') return MARKET_CATEGORIES.crypto.includes(asset.symbol);
+        if (category === 'ETF') return MARKET_CATEGORIES.etf.includes(asset.symbol);
+        return false;
+      });
+    }
+
+    // Paginate
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    const paginatedAssets = filtered.slice(start, end);
+    const hasMore = end < filtered.length;
+
+    return { assets: paginatedAssets, hasMore };
+  } catch (error) {
+    console.error('getMarketList error:', error);
+    return { assets: [], hasMore: false };
+  }
 }

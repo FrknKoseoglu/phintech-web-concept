@@ -11,7 +11,7 @@ import TradeTabs from "@/components/trade/TradeTabs";
 
 interface TradePageClientProps {
   assets: Asset[];
-  user: User;
+  user: User | null;
   transactions: Transaction[];
   initialSymbol?: string;
   initialMode?: 'BUY' | 'SELL';
@@ -26,14 +26,24 @@ export default function TradePageClient({
 }: TradePageClientProps) {
   const [selectedSymbol, setSelectedSymbol] = useState(initialSymbol);
 
+  // Guest user defaults
+  const guestUser: User = {
+    id: "guest",
+    balance: 0,
+    portfolio: [],
+    favorites: [],
+  };
+
+  const activeUser = user || guestUser;
+
   const selectedAsset = assets.find((a) => a.symbol === selectedSymbol) || assets[0];
   
   // Find how much of this asset the user owns
-  const portfolioItem = user.portfolio.find((p) => p.symbol === selectedSymbol);
+  const portfolioItem = activeUser.portfolio.find((p) => p.symbol === selectedSymbol);
   const ownedQuantity = portfolioItem?.quantity || 0;
 
   // Check if symbol is in favorites
-  const isFavorite = user.favorites?.includes(selectedSymbol) || false;
+  const isFavorite = activeUser.favorites?.includes(selectedSymbol) || false;
 
   // Calculate available balance in correct quote currency
   const availableBalance = useMemo(() => {
@@ -42,20 +52,20 @@ export default function TradePageClient({
     
     if (quoteCurrency === 'TRY') {
       // Asset priced in TRY, use TRY balance
-      return user.balance;
+      return activeUser.balance;
     } else if (quoteCurrency === 'USD') {
       // Asset priced in USD, find USD holdings
-      const usdHolding = user.portfolio.find(p => p.symbol === 'USD');
+      const usdHolding = activeUser.portfolio.find(p => p.symbol === 'USD');
       return usdHolding?.quantity || 0;
     } else if (quoteCurrency === 'USDT') {
       // Asset priced in USDT, find USDT holdings
-      const usdtHolding = user.portfolio.find(p => p.symbol === 'USDT');
+      const usdtHolding = activeUser.portfolio.find(p => p.symbol === 'USDT');
       return usdtHolding?.quantity || 0;
     }
     
     // Default to TRY balance
-    return user.balance;
-  }, [selectedAsset.currency, user.balance, user.portfolio]);
+    return activeUser.balance;
+  }, [selectedAsset.currency, activeUser.balance, activeUser.portfolio]);
 
   return (
     <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)] w-full max-w-[1920px] mx-auto overflow-hidden bg-gray-100 dark:bg-[#0a0a0a] p-2 gap-2">

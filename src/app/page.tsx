@@ -8,7 +8,7 @@ export default async function DashboardPage() {
   // Fetch data via Server Actions
   const [marketData, user] = await Promise.all([
     fetchMarketData(),
-    fetchUser(),
+    fetchUser(), // Returns null for unauthenticated users
   ]);
 
   return (
@@ -17,3 +17,4 @@ export default async function DashboardPage() {
     </DashboardManager>
   );
 }
+

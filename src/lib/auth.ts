@@ -1,8 +1,13 @@
 import { type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { prisma } from "@/lib/prisma";
 
 export const authOptions: NextAuthOptions = {
+  // @ts-ignore - Prisma adapter types are compatible
+  adapter: PrismaAdapter(prisma),
+  
   providers: [
     // Google OAuth Provider
     GoogleProvider({
@@ -17,12 +22,28 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email", placeholder: "demo@midas.app" },
       },
       async authorize(credentials) {
-        // Demo mode: Accept any email and create a mock user
+        // Demo mode: Accept any email and find/create user
         if (credentials?.email) {
+          // Try to find existing user
+          let user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+          });
+
+          // Create user if doesn't exist (with default 100k balance)
+          if (!user) {
+            user = await prisma.user.create({
+              data: {
+                email: credentials.email,
+                name: credentials.email.split("@")[0],
+                balance: 100000, // Default balance
+              },
+            });
+          }
+
           return {
-            id: "demo_user_001",
-            email: credentials.email,
-            name: credentials.email.split("@")[0],
+            id: user.id,
+            email: user.email,
+            name: user.name,
           };
         }
         return null;
@@ -35,10 +56,14 @@ export const authOptions: NextAuthOptions = {
   },
   
   callbacks: {
-    async session({ session, token }) {
-      // Add user ID to session
-      if (session.user && token.sub) {
-        (session.user as { id?: string }).id = token.sub;
+    async session({ session, token, user }) {
+      // Add user ID to session from token (JWT) or user object (Database)
+      if (session.user) {
+        if (token?.sub) {
+          (session.user as { id?: string }).id = token.sub;
+        } else if (user?.id) {
+          (session.user as { id?: string }).id = user.id;
+        }
       }
       return session;
     },
@@ -58,3 +83,4 @@ export const authOptions: NextAuthOptions = {
   
   secret: process.env.NEXTAUTH_SECRET || "midas-demo-secret-key-change-in-production",
 };
+

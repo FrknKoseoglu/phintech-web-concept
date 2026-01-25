@@ -41,9 +41,27 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
     getMarketDataSnapshot(),
   ]);
 
+  // Return early with guest message if no user
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
+            Cüzdan
+          </h1>
+          <div className="bg-white dark:bg-black rounded-xl p-8 text-center border border-gray-200 dark:border-gray-800">
+            <p className="text-gray-500 dark:text-gray-400">
+              Portföyünüzü görüntülemek için lütfen giriş yapın
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Build holdings with calculated values (excluding currency holdings)
   const allHoldings: PortfolioHolding[] = user.portfolio
-    .filter((item) => item.quantity > 0.00001 && !['USD', 'USDT'].includes(item.symbol))
+    .filter(item => !['USD', 'USDT'].includes(item.symbol)) // Exclude currencies
     .map((item) => {
       const asset = marketData.find((a) => a.symbol === item.symbol);
       if (!asset) return null;
