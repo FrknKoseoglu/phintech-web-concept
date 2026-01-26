@@ -81,6 +81,7 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
         profitLoss,
         profitLossPercent,
         category: asset.category,
+        changePercent24h: asset.changePercent, // 24-hour price change from market data
       };
     })
     .filter(Boolean) as PortfolioHolding[];
@@ -249,7 +250,7 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
                   <tr>
                     <th className="px-6 py-4">Varlık</th>
                     <th className="px-6 py-4">Fiyat</th>
-                    <th className="px-6 py-4">Değişim</th>
+                    <th className="px-6 py-4">24 Saatlik Değişim</th>
                     <th className="px-6 py-4">Bakiye</th>
                     <th className="px-6 py-4 text-right">Değer (USD)</th>
                     <th className="px-6 py-4 text-right">İşlem</th>
@@ -351,7 +352,7 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
 
                   {/* Asset Rows */}
                   {holdings.map((holding) => {
-                    const isPositive = holding.profitLossPercent >= 0;
+                    const is24hPositive = (holding.changePercent24h || 0) >= 0;
 
                     return (
                       <tr key={holding.symbol} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
@@ -372,10 +373,10 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
                         <td className="px-6 py-4">
                           <span className={cn(
                             "flex items-center gap-1 font-medium",
-                            isPositive ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"
+                            is24hPositive ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"
                           )}>
-                            {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                            {isPositive ? "+" : ""}{holding.profitLossPercent.toFixed(2)}%
+                            {is24hPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                            {is24hPositive ? "+" : ""}{(holding.changePercent24h || 0).toFixed(2)}%
                           </span>
                         </td>
                         <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">

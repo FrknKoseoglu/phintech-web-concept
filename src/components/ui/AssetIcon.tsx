@@ -10,32 +10,39 @@ interface AssetIconProps {
   className?: string;
 }
 
-// Known logo URLs for our main assets
-const LOGO_MAP: Record<string, string> = {
-  // Crypto
-  'BTC': 'https://assets.coincap.io/assets/icons/btc@2x.png',
-  'ETH': 'https://assets.coincap.io/assets/icons/eth@2x.png',
-  'SOL': 'https://assets.coincap.io/assets/icons/sol@2x.png',
-  'AVAX': 'https://assets.coincap.io/assets/icons/avax@2x.png',
-  'DOGE': 'https://assets.coincap.io/assets/icons/doge@2x.png',
-  // US Stocks
-  'AAPL': 'https://logo.clearbit.com/apple.com',
-  'TSLA': 'https://logo.clearbit.com/tesla.com',
-  'NVDA': 'https://logo.clearbit.com/nvidia.com',
-  'AMZN': 'https://logo.clearbit.com/amazon.com',
-  'MSFT': 'https://logo.clearbit.com/microsoft.com',
-  // BIST
-  'THYAO': 'https://logo.clearbit.com/turkishairlines.com',
-  'GARAN': 'https://logo.clearbit.com/garantibbva.com.tr',
-  'AKBNK': 'https://logo.clearbit.com/akbank.com',
-  'EREGL': 'https://logo.clearbit.com/erdemir.com.tr',
-  'SASA': 'https://logo.clearbit.com/sasapolyester.com',
-  // Commodities / Currency
-  'XAU': 'https://assets.coincap.io/assets/icons/xau@2x.png',
-  'XAG': 'https://assets.coincap.io/assets/icons/xag@2x.png',
+// Crypto symbols that use crypto endpoint
+const CRYPTO_SYMBOLS = ['BTC', 'ETH', 'SOL', 'AVAX', 'DOGE', 'XRP', 'ADA', 'DOT', 'MATIC', 'LINK'];
+
+// Static logos for currencies
+const STATIC_LOGOS: Record<string, string> = {
   'USD': 'https://flagcdn.com/w80/us.png',
   'TRY': 'https://flagcdn.com/w80/tr.png',
 };
+
+/**
+ * Get logo URL for a symbol using logo.dev
+ * Crypto: https://img.logo.dev/crypto/{symbol}?token=...
+ * Stocks: https://img.logo.dev/ticker/{SYMBOL}?token=...
+ */
+function getLogoUrl(symbol: string): string | undefined {
+  // Check static logos first
+  if (STATIC_LOGOS[symbol]) {
+    return STATIC_LOGOS[symbol];
+  }
+
+  const token = process.env.NEXT_PUBLIC_LOGO_DEV_TOKEN || 'LOGO_DEV_PUBLISHABLE_KEY';
+  
+  // Determine if this is a crypto or stock
+  const isCrypto = CRYPTO_SYMBOLS.includes(symbol);
+  
+  if (isCrypto) {
+    // Use crypto endpoint - lowercase required
+    return `https://img.logo.dev/crypto/${symbol.toLowerCase()}?token=${token}`;
+  } else {
+    // Use ticker endpoint for stocks - uppercase
+    return `https://img.logo.dev/ticker/${symbol.toUpperCase()}?token=${token}`;
+  }
+}
 
 // Generate a consistent pastel color from a string
 function getColorFromSymbol(symbol: string): string {
@@ -61,25 +68,49 @@ function getColorFromSymbol(symbol: string): string {
   return colors[Math.abs(hash) % colors.length];
 }
 
+/**
+ * AssetIcon Component
+ * 
+ * Displays a logo for financial assets (stocks, crypto, currencies).
+ * Uses logo.dev API with intelligent fallback to letter avatars.
+ * 
+ * @param {string} symbol - Asset symbol (e.g., "BTC", "AAPL", "THYAO")
+ * @param {number} size - Icon size in pixels (default: 40)
+ * @param {string} className - Additional Tailwind classes
+ * 
+ * @example
+ * <AssetIcon symbol="BTC" size={48} />
+ * <AssetIcon symbol="AAPL" size={32} className="border-2" />
+ */
 export default function AssetIcon({ symbol, size = 40, className }: AssetIconProps) {
   const [hasError, setHasError] = useState(false);
   
-  // Get logo URL from map or try to construct one
-  const logoUrl = LOGO_MAP[symbol];
+  // Get logo URL using logo.dev service
+  const logoUrl = getLogoUrl(symbol);
   
   // If we have a known URL and no error, show the image
   if (logoUrl && !hasError) {
+    // Calculate image size with 5% padding on each side (total 10% reduction)
+    const paddingSize = Math.round(size * 0.05);
+    const imageSize = size - (paddingSize * 2);
+
     return (
       <div 
-        className={cn("relative overflow-hidden rounded-full bg-white dark:bg-gray-900 flex items-center justify-center", className)}
-        style={{ width: size, height: size }}
+        className={cn("relative overflow-hidden flex items-center justify-center bg-white dark:bg-gray-900", className)}
+        style={{ 
+          width: size, 
+          height: size,
+          borderRadius: '50%', // Ensure perfect circle
+          padding: `${paddingSize}px` // 5% padding
+        }}
       >
         <Image
           src={logoUrl}
           alt={symbol}
-          width={size - 4}
-          height={size - 4}
+          width={imageSize}
+          height={imageSize}
           className="object-contain"
+          style={{ borderRadius: '50%' }}
           onError={() => setHasError(true)}
           unoptimized // Skip Next.js image optimization for external URLs
         />
@@ -95,7 +126,7 @@ export default function AssetIcon({ symbol, size = 40, className }: AssetIconPro
   return (
     <div
       className={cn(
-        "rounded-full flex items-center justify-center font-bold text-white",
+        "flex items-center justify-center font-bold text-white",
         className
       )}
       style={{ 
@@ -103,9 +134,11 @@ export default function AssetIcon({ symbol, size = 40, className }: AssetIconPro
         height: size, 
         backgroundColor,
         fontSize: `${fontSize}px`,
+        borderRadius: '50%' // Ensure perfect circle
       }}
     >
       {letters}
     </div>
   );
 }
+

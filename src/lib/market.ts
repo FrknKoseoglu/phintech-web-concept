@@ -271,6 +271,10 @@ export async function getMarketData(): Promise<Asset[]> {
       const quote = yahooResults.find((r: QuoteResult) => r.symbol === yahooSymbol);
       
       if (quote && quote.regularMarketPrice) {
+        const hasChangePercent = quote.regularMarketChangePercent !== undefined && quote.regularMarketChangePercent !== null;
+        if (!hasChangePercent) {
+          console.warn(`⚠️ ${asset.symbol}: No changePercent from Yahoo Finance (price: ${quote.regularMarketPrice})`);
+        }
         return {
           ...asset,
           price: quote.regularMarketPrice,
@@ -278,7 +282,8 @@ export async function getMarketData(): Promise<Asset[]> {
         };
       }
       
-      // 4. Fallback to default prices
+      // 4. Fallback to default prices (with 0% change)
+      console.warn(`⚠️ ${asset.symbol}: Using fallback data (no Yahoo Finance quote found)`);
       return asset;
     });
 

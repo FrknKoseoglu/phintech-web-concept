@@ -88,6 +88,7 @@ export interface PortfolioHolding {
   profitLoss: number;
   profitLossPercent: number;
   category: AssetCategory;
+  changePercent24h?: number; // 24-hour price change (from market data)
 }
 
 /**
