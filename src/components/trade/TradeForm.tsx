@@ -250,13 +250,15 @@ export default function TradeForm({
 
       {/* Submit Button */}
       <button
-        onClick={handleSubmit}
-        disabled={!isValidOrder || isPending}
+        onClick={session ? handleSubmit : () => router.push("/login")}
+        disabled={session ? (!isValidOrder || isPending) : false}
         className={cn(
           "w-full font-bold py-4 rounded-2xl shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-base",
-          isBuy
-            ? "bg-success hover:bg-green-600 text-white shadow-green-500/25"
-            : "bg-danger hover:bg-red-600 text-white shadow-red-500/25"
+          !session
+            ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/25"
+            : isBuy
+              ? "bg-success hover:bg-green-600 text-white shadow-green-500/25"
+              : "bg-danger hover:bg-red-600 text-white shadow-red-500/25"
         )}
       >
         {isPending ? (
@@ -264,6 +266,8 @@ export default function TradeForm({
             <Loader2 className="w-5 h-5 animate-spin" />
             İşleniyor...
           </>
+        ) : !session ? (
+          "İşlem Yapmak İçin Giriş Yap"
         ) : (
           <>
             {getHoldingUnit(asset.symbol)} {isBuy ? "Satın Al" : "Sat"}

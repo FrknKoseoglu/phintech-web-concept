@@ -107,7 +107,7 @@ export async function fetchTransactions(): Promise<Transaction[]> {
   const session = await getServerSession(authOptions);
   
   if (!session?.user?.id) {
-    throw new Error("Unauthorized - Please login");
+    return [];
   }
 
   const transactions = await prisma.transaction.findMany({
