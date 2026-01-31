@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AuthProvider from "@/components/AuthProvider";
 import NavigationProgress from "@/components/NavigationProgress";
-import { BRAND_FULL_NAME } from "@/lib/brand-config";
+import { BRAND_FULL_NAME, isMidasBrand } from "@/lib/brand-config";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -16,9 +16,16 @@ const inter = Inter({
   display: "swap",
 });
 
+const faviconPath = isMidasBrand() ? "/favicon-midas.svg" : "/favicon-phintech.svg";
+
 export const metadata: Metadata = {
   title: BRAND_FULL_NAME,
   description: "Desktop trading interface - A concept project",
+  icons: {
+    icon: faviconPath,
+    shortcut: faviconPath,
+    apple: faviconPath,
+  },
 };
 
 export default function RootLayout({
