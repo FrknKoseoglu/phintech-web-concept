@@ -1,9 +1,10 @@
 import { Zap, BarChart3, Bell, ArrowRight, Sparkles, Shield, Gauge } from "lucide-react";
 import Link from "next/link";
 import DemoButton from "@/components/ui/DemoButton";
+import { BRAND_FULL_NAME, BRAND_PRO_NAME, BRAND_STANDARD_NAME } from "@/lib/brand-config";
 
 export const metadata = {
-  title: "Midas Pro Analiz | Midas Web Interface",
+  title: `${BRAND_PRO_NAME} Analiz | ${BRAND_FULL_NAME}`,
   description: "İleri seviye yatırımcılar için profesyonel analiz araçları",
 };
 
@@ -36,10 +37,10 @@ export default function AnalysisPage() {
             Midas Pro ile premium verilere ulaş, yatırımlarını profesyonelce yönet.
           </p>
           <DemoButton 
-            featureName="Midas Pro abonelik"
+            featureName={`${BRAND_PRO_NAME} abonelik`}
             className="group flex items-center justify-center gap-2 h-14 px-8 rounded-full border border-white/20 bg-white/5 hover:bg-white/10 text-white text-[17px] font-bold transition-all backdrop-blur-sm"
           >
-            <span>Midas Pro'ya Üye Ol</span>
+            <span>{BRAND_PRO_NAME}'ya Üye Ol</span>
             <span className="opacity-60 mx-1">-</span>
             <span>₺950/ay</span>
           </DemoButton>
@@ -51,7 +52,7 @@ export default function AnalysisPage() {
         <div className="max-w-[1200px] mx-auto">
           {/* Section Header */}
           <div className="flex flex-col items-center text-center mb-16 gap-4">
-            <h2 className="text-white text-3xl md:text-4xl font-semibold">Midas Pro Özellikleri</h2>
+            <h2 className="text-white text-3xl md:text-4xl font-semibold">{BRAND_PRO_NAME} Özellikleri</h2>
             <p className="text-gray-400 text-lg max-w-2xl">
               Profesyonel yatırımcılar için tasarlanmış, hız ve veri odaklı özel araçlar.
             </p>
@@ -150,7 +151,7 @@ export default function AnalysisPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Free Plan */}
             <div className="flex flex-col p-8 rounded-2xl bg-[#0f0f0f] border border-white/5">
-              <h3 className="text-white text-2xl font-bold mb-2">Midas Standart</h3>
+              <h3 className="text-white text-2xl font-bold mb-2">{BRAND_STANDARD_NAME}</h3>
               <p className="text-gray-400 text-sm mb-6">Yeni başlayanlar için</p>
               <div className="text-4xl font-bold text-white mb-6">
                 Ücretsiz
@@ -185,7 +186,7 @@ export default function AnalysisPage() {
               <div className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full">
                 ÖNERİLEN
               </div>
-              <h3 className="text-white text-2xl font-bold mb-2">Midas Pro</h3>
+              <h3 className="text-white text-2xl font-bold mb-2">{BRAND_PRO_NAME}</h3>
               <p className="text-gray-400 text-sm mb-6">Profesyonel yatırımcılar için</p>
               <div className="text-4xl font-bold text-white mb-1">
                 ₺950<span className="text-lg font-normal text-gray-400">/ay</span>
@@ -212,7 +213,7 @@ export default function AnalysisPage() {
                 </li>
               </ul>
               <DemoButton 
-                featureName="Midas Pro abonelik"
+                featureName={`${BRAND_PRO_NAME} abonelik`}
                 className="w-full py-3 text-center rounded-full bg-primary hover:bg-primary-dark text-white font-bold transition-all shadow-lg shadow-primary/20"
               >
                 Pro'ya Geç

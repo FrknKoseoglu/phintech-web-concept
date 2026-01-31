@@ -10,6 +10,7 @@ import {
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { BRAND_PRO_NAME } from "@/lib/brand-config";
 
 const menuItems = [
   { href: "/wallet", category: undefined, label: "Tümü", icon: Wallet },
@@ -45,13 +46,13 @@ export default function WalletSidebar() {
         );
       })}
 
-      {/* Midas Pro Link */}
+      {/* Pro Link */}
       <Link
         href="/analysis"
         className="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors bg-gradient-to-r from-yellow-500/10 to-amber-500/10 text-amber-500 hover:from-yellow-500/20 hover:to-amber-500/20 border border-amber-500/20 mt-4"
       >
         <Sparkles className="w-5 h-5" />
-        Midas Pro
+        {BRAND_PRO_NAME}
       </Link>
     </div>
   );

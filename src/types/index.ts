@@ -112,3 +112,13 @@ export interface LimitOrder {
   updatedAt: string;
 }
 
+/**
+ * Result of a limit order operation.
+ */
+export interface LimitOrderResult {
+  success: boolean;
+  message: string;
+  order?: LimitOrder;
+}
+
+

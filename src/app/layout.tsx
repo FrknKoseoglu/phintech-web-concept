@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AuthProvider from "@/components/AuthProvider";
 import NavigationProgress from "@/components/NavigationProgress";
+import { BRAND_FULL_NAME } from "@/lib/brand-config";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -16,7 +17,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Midas Web Interface",
+  title: BRAND_FULL_NAME,
   description: "Desktop trading interface - A concept project",
 };
 

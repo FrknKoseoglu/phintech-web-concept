@@ -223,9 +223,9 @@ const fetchYahooQuotes = unstable_cache(
     const yahooFinance = new YahooFinance();
     return await yahooFinance.quote(symbols) as QuoteResult[];
   },
-  ['yahoo-market-quotes-v4'], // Bump version again
+  ['yahoo-market-quotes-v5'], // Bumped for 24h cache
   { 
-    revalidate: 60, // Cache for 60 seconds
+    revalidate: 86400, // Cache for 24 hours (development stability)
     tags: ['market-data'] 
   }
 );

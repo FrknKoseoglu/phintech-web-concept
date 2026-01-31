@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Transaction, PortfolioItem } from "@/types";
 import { cn, getHoldingUnit } from "@/lib/utils";
+import OpenOrders from "./OpenOrders";
 
 interface TradeTabsProps {
   symbol: string;
@@ -52,27 +53,15 @@ export default function TradeTabs({ symbol, transactions, portfolioItem, current
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 overflow-hidden">
         {activeTab === "orders" && (
-          <div className="h-full flex flex-col items-center justify-center text-center">
-            <div className="text-gray-500 mb-2">
-              <svg className="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <p className="text-sm text-gray-400">
-              Açık emiriniz bulunmuyor.
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              Piyasa emirleri anlık olarak gerçekleştirilir.
-            </p>
-          </div>
+          <OpenOrders symbol={symbol} />
         )}
 
         {activeTab === "history" && (
-          <div>
+          <div className="h-full overflow-auto p-4">
             {symbolTransactions.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center py-8">
+              <div className="h-full flex flex-col items-center justify-center text-center">
                 <p className="text-sm text-gray-400">
                   {symbol} için işlem geçmişi bulunmuyor.
                 </p>
@@ -120,9 +109,9 @@ export default function TradeTabs({ symbol, transactions, portfolioItem, current
         )}
 
         {activeTab === "assets" && (
-          <div>
+          <div className="h-full overflow-auto p-4">
             {holdingQuantity <= 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center py-8">
+              <div className="h-full flex flex-col items-center justify-center text-center">
                 <p className="text-sm text-gray-400">
                   {symbol} varlığınız bulunmuyor.
                 </p>

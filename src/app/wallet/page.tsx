@@ -11,12 +11,13 @@ import { authOptions } from "@/lib/auth";
 import RecentTransactions from "@/components/wallet/RecentTransactions";
 import WalletSidebar from "@/components/wallet/WalletSidebar";
 import DemoButton from "@/components/ui/DemoButton";
+import { BRAND_FULL_NAME, BRAND_PLUS_NAME, BRAND_DESCRIPTION } from "@/lib/brand-config";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Portföy | Midas Web Interface",
-  description: "Manage your portfolio on Midas trading platform",
+  title: `Portföy | ${BRAND_FULL_NAME}`,
+  description: `Manage your portfolio on ${BRAND_DESCRIPTION}`,
 };
 
 interface WalletPageProps {
@@ -205,7 +206,7 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
         {/* Midas Plus Card */}
         <Link href="/analysis" className="bg-gradient-to-br from-primary to-purple-600 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden group cursor-pointer block">
           <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-110 transition-transform" />
-          <h3 className="text-lg font-bold mb-2 relative z-10">Midas Plus'a Geç</h3>
+          <h3 className="text-lg font-bold mb-2 relative z-10">{BRAND_PLUS_NAME}'a Geç</h3>
           <p className="text-white/80 text-sm mb-4 relative z-10">
             Daha düşük komisyonlar ve canlı veri akışı ile yatırımlarını güçlendir.
           </p>

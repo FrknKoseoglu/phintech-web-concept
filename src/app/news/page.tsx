@@ -1,6 +1,7 @@
 import { getMidasNews } from "@/actions/news";
 import { ExternalLink, Newspaper } from "lucide-react";
 import Link from "next/link";
+import { BRAND_NAME } from "@/lib/brand-config";
 
 export const metadata = {
   title: "Haberler",
@@ -21,7 +22,7 @@ export default async function NewsPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-black dark:text-white">
-                Midas Gündem
+                {BRAND_NAME} Gündem
               </h1>
               <p className="text-sm text-gray-500 dark:text-text-muted">
                 Finans dünyasından en son haberler
@@ -34,7 +35,7 @@ export default async function NewsPage() {
             rel="noopener noreferrer"
             className="text-sm text-primary hover:text-primary-hover flex items-center gap-1 transition-colors"
           >
-            Midas&apos;ta Aç
+            {BRAND_NAME}&apos;ta Aç
             <ExternalLink className="w-4 h-4" />
           </a>
         </div>

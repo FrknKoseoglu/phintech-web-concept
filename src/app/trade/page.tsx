@@ -1,11 +1,12 @@
 import { fetchMarketData, fetchUser, fetchTransactions } from "@/actions/market";
 import TradePageClient from "@/components/trade/TradePageClient";
+import { BRAND_FULL_NAME, BRAND_DESCRIPTION } from "@/lib/brand-config";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Al-Sat | Midas Web Interface",
-  description: "Trade assets on Midas trading platform",
+  title: `Al-Sat | ${BRAND_FULL_NAME}`,
+  description: `Trade assets on ${BRAND_DESCRIPTION}`,
 };
 
 interface TradePageProps {

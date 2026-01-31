@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import type { Asset } from "@/types";
 import { cn, getHoldingUnit } from "@/lib/utils";
 import { executeTrade } from "@/actions/trade";
+import { createLimitOrder } from "@/actions/limit-orders";
 
 interface TradeFormProps {
   asset: Asset;
@@ -25,15 +26,21 @@ export default function TradeForm({
   const { data: session } = useSession();
   const router = useRouter();
   const [isBuy, setIsBuy] = useState(initialMode === 'BUY');
+  const [orderType, setOrderType] = useState<'MARKET' | 'LIMIT'>('MARKET');
   const [quantity, setQuantity] = useState("");
+  const [limitPrice, setLimitPrice] = useState("");
   const [sliderValue, setSliderValue] = useState(0);
   const [isPending, startTransition] = useTransition();
 
-  // Calculate estimated total based on current market price
+
+
+  // Calculate estimated total based on current market price or limit price
   const estimatedTotal = useMemo(() => {
     const q = parseFloat(quantity) || 0;
-    return q * asset.price;
-  }, [quantity, asset.price]);
+    const price = orderType === 'LIMIT' ? (parseFloat(limitPrice) || 0) : asset.price;
+    return q * price;
+  }, [quantity, limitPrice, asset.price, orderType]);
+
 
   // Calculate max quantity user can buy/sell
   const maxQuantity = useMemo(() => {
@@ -47,10 +54,18 @@ export default function TradeForm({
   const isValidOrder = useMemo(() => {
     const q = parseFloat(quantity) || 0;
     if (q <= 0) return false;
+    
+    // For limit orders, also validate limit price
+    if (orderType === 'LIMIT') {
+      const lp = parseFloat(limitPrice) || 0;
+      if (lp <= 0) return false;
+    }
+    
     if (isBuy && estimatedTotal > availableBalance) return false;
     if (!isBuy && q > ownedQuantity) return false;
     return true;
-  }, [quantity, estimatedTotal, availableBalance, isBuy, ownedQuantity]);
+  }, [quantity, limitPrice, estimatedTotal, availableBalance, isBuy, ownedQuantity, orderType]);
+
 
   // Handle slider change
   const handleSliderChange = (value: number) => {
@@ -62,8 +77,11 @@ export default function TradeForm({
   // Reset form
   const resetForm = () => {
     setQuantity("");
+    setLimitPrice("");
     setSliderValue(0);
   };
+
+
 
   // Handle trade submission
   const handleSubmit = () => {
@@ -85,17 +103,40 @@ export default function TradeForm({
 
     startTransition(async () => {
       try {
-        const result = await executeTrade(asset.symbol, qty, tradeType);
-        
-        if (result.success) {
-          toast.success("İşlem Başarılı", {
-            description: result.message,
-          });
-          resetForm();
+        if (orderType === 'MARKET') {
+          // Execute market order immediately
+          const result = await executeTrade(asset.symbol, qty, tradeType);
+          
+          if (result.success) {
+            toast.success("İşlem Başarılı", {
+              description: result.message,
+            });
+            resetForm();
+          } else {
+            toast.error("İşlem Başarısız", {
+              description: result.message,
+            });
+          }
         } else {
-          toast.error("İşlem Başarısız", {
-            description: result.message,
-          });
+          // Create limit order
+          const targetPrice = parseFloat(limitPrice);
+          const result = await createLimitOrder(
+            asset.symbol,
+            qty,
+            targetPrice,
+            tradeType
+          );
+          
+          if (result.success) {
+            toast.success("Limit Emir Oluşturuldu", {
+              description: result.message,
+            });
+            resetForm();
+          } else {
+            toast.error("Emir Oluşturulamadı", {
+              description: result.message,
+            });
+          }
         }
       } catch (error) {
         toast.error("Bir hata oluştu", {
@@ -104,6 +145,7 @@ export default function TradeForm({
       }
     });
   };
+
 
   return (
     <div className="p-4 bg-white dark:bg-black">
@@ -119,7 +161,7 @@ export default function TradeForm({
               : "text-gray-400 hover:text-white"
           )}
         >
-          Piyasa Al
+          {orderType === 'MARKET' ? 'Piyasa' : 'Limit'} Al
         </button>
         <button
           onClick={() => { setIsBuy(false); resetForm(); }}
@@ -131,7 +173,35 @@ export default function TradeForm({
               : "text-gray-400 hover:text-white"
           )}
         >
-          Piyasa Sat
+          {orderType === 'MARKET' ? 'Piyasa' : 'Limit'} Sat
+        </button>
+      </div>
+
+      {/* Order Type Toggle - Market/Limit */}
+      <div className="flex gap-1 mb-4 bg-gray-100 dark:bg-[#1C1C1E] p-1 rounded-xl">
+        <button
+          onClick={() => { setOrderType('MARKET'); setLimitPrice(""); }}
+          disabled={isPending}
+          className={cn(
+            "flex-1 py-2 text-xs font-semibold rounded-lg transition-all",
+            orderType === 'MARKET'
+              ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow"
+              : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+          )}
+        >
+          Piyasa Emri
+        </button>
+        <button
+          onClick={() => setOrderType('LIMIT')}
+          disabled={isPending}
+          className={cn(
+            "flex-1 py-2 text-xs font-semibold rounded-lg transition-all",
+            orderType === 'LIMIT'
+              ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow"
+              : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+          )}
+        >
+          Limit Emir
         </button>
       </div>
 
@@ -144,6 +214,31 @@ export default function TradeForm({
           </span>
         </div>
       </div>
+
+      {/* Limit Price Input (shown only for limit orders) */}
+      {orderType === 'LIMIT' && (
+        <div className="mb-4">
+          <label className="block text-xs text-gray-400 mb-1.5">
+            Limit Fiyatı ({asset.currency === 'TRY' ? '₺' : '$'})
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              value={limitPrice}
+              onChange={(e) => setLimitPrice(e.target.value)}
+              placeholder={`${asset.price.toFixed(2)}`}
+              disabled={isPending}
+              className="w-full bg-gray-100 dark:bg-[#1C1C1E] border border-gray-300 dark:border-gray-700 rounded-2xl py-3 pl-4 pr-14 text-sm font-medium focus:ring-2 focus:ring-primary focus:border-primary text-gray-900 dark:text-white transition-all disabled:opacity-50"
+            />
+            <span className="absolute right-4 top-3.5 text-xs text-gray-400 font-medium">
+              {asset.currency === 'TRY' ? '₺' : '$'}
+            </span>
+          </div>
+          <div className="mt-1 text-xs text-gray-400">
+            Piyasa fiyatı: {asset.currency === 'TRY' ? '₺' : '$'}{asset.price.toLocaleString(asset.currency === 'TRY' ? "tr-TR" : "en-US", { minimumFractionDigits: 2 })}
+          </div>
+        </div>
+      )}
 
       {/* Quantity Input */}
       <div className="mb-4">
@@ -270,14 +365,20 @@ export default function TradeForm({
           "İşlem Yapmak İçin Giriş Yap"
         ) : (
           <>
-            {getHoldingUnit(asset.symbol)} {isBuy ? "Satın Al" : "Sat"}
+            {orderType === 'MARKET' 
+              ? `${getHoldingUnit(asset.symbol)} ${isBuy ? "Satın Al" : "Sat"}`
+              : `Limit Emir Oluştur`
+            }
           </>
         )}
       </button>
 
       {/* Info Text */}
       <p className="text-[10px] text-gray-400 text-center mt-3">
-        Piyasa emri, anlık piyasa fiyatından gerçekleştirilir.
+        {orderType === 'MARKET' 
+          ? 'Piyasa emri, anlık piyasa fiyatından gerçekleştirilir.'
+          : 'Limit emir, belirlediğiniz fiyata ulaşıldığında otomatik olarak gerçekleştirilir.'
+        }
       </p>
     </div>
   );

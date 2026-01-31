@@ -1,5 +1,6 @@
 import { getMidasNews } from "@/actions/news";
 import { ExternalLink } from "lucide-react";
+import { BRAND_NAME } from "@/lib/brand-config";
 
 interface NewsFeedProps {
   limit?: number;
@@ -14,7 +15,7 @@ export default async function NewsFeed({ limit = 3, showHeader = true }: NewsFee
     return (
       <div className="bg-white dark:bg-black rounded-2xl p-5 border border-gray-200 dark:border-gray-800">
         <h3 className="font-semibold text-black dark:text-white mb-4">
-          Midas Gündem
+          {BRAND_NAME} Gündem
         </h3>
         <p className="text-sm text-gray-500 dark:text-text-muted">
           Haberler yüklenemedi.
@@ -27,7 +28,7 @@ export default async function NewsFeed({ limit = 3, showHeader = true }: NewsFee
     <div className="bg-white dark:bg-black rounded-2xl p-5 border border-gray-200 dark:border-gray-800">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-black dark:text-white">
-          Midas Gündem
+          {BRAND_NAME} Gündem
         </h3>
         <a
           href="https://www.getmidas.com/gundem"

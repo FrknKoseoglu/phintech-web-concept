@@ -140,39 +140,67 @@ export interface ChartDataPoint {
 // Note: SYMBOL_MAP is imported from @/lib/market
 
 // Cached wrapper for Yahoo Finance chart API
+// Cache for 24 hours to prevent rate limiting in development
 const fetchYahooChart = unstable_cache(
   async (yahooSymbol: string, period1Str: string, period2Str: string, interval: '1m' | '5m' | '1h' | '1d') => {
+    console.log(`📊 Fetching chart data for ${yahooSymbol} (${period1Str} to ${period2Str}, interval: ${interval})`);
     const YahooFinance = (await import('yahoo-finance2')).default;
     const yahooFinance = new YahooFinance();
     
-    return await yahooFinance.chart(yahooSymbol, {
+    const result = await yahooFinance.chart(yahooSymbol, {
       period1: period1Str,
       period2: period2Str,
       interval,
     });
+    
+    console.log(`✅ Yahoo chart data received: ${result.quotes?.length || 0} data points`);
+    return result;
   },
-  ['yahoo-chart-v2'], // Bump version to force cache invalidation
+  ['yahoo-chart-v4'], // Bumped for 24h cache
   { 
-    revalidate: 120, // Cache for 120 seconds
+    revalidate: 86400, // Cache for 24 hours (development stability)
     tags: ['chart-data'] 
   }
 );
 
 /**
  * Server Action: Fetches historical price data for charting.
- * Uses Yahoo Finance chart API with caching.
+ * - Uses CoinGecko for crypto assets (more reliable, no rate limits)
+ * - Uses Yahoo Finance for stocks/commodities (with aggressive caching)
  */
 export async function getAssetHistory(
   symbol: string,
   range: '1d' | '1wk' | '1mo' | '3mo' | '1y' = '1mo'
 ): Promise<ChartDataPoint[]> {
   try {
-    const yahooSymbol = SYMBOL_MAP[symbol] || symbol;
-    
     // Get current asset price for fallback data
     const marketData = await getMarketData();
     const currentAsset = marketData.find(a => a.symbol === symbol);
     const currentPrice = currentAsset?.price || 100; // Default if asset not found
+    
+    // ===== CRYPTO: Use CoinGecko (Reliable) =====
+    const cryptoSymbols = ['BTC', 'ETH', 'SOL', 'AVAX', 'DOGE', 'USDT'];
+    if (cryptoSymbols.includes(symbol)) {
+      try {
+        const { getCryptoHistory } = await import('@/lib/coingecko');
+        const coinGeckoData = await getCryptoHistory(symbol, range);
+        
+        if (coinGeckoData && coinGeckoData.length > 0) {
+          console.log(`✅ Using CoinGecko data for ${symbol}: ${coinGeckoData.length} points`);
+          return coinGeckoData;
+        }
+        
+        console.warn(`⚠️ CoinGecko returned empty data for ${symbol}, using fallback`);
+      } catch (error) {
+        console.error(`❌ CoinGecko error for ${symbol}:`, error);
+      }
+      
+      // Fallback for crypto if CoinGecko fails
+      return generateFallbackData(range, symbol, currentPrice);
+    }
+    
+    // ===== STOCKS/COMMODITIES: Use Yahoo Finance (Cached) =====
+    const yahooSymbol = SYMBOL_MAP[symbol] || symbol;
     
     // Calculate period based on range
     const now = new Date();
@@ -226,10 +254,13 @@ export async function getAssetHistory(
     const currentPrice = currentAsset?.price || 100;
     
     if (error?.message?.includes('429') || error?.message?.includes('Too Many Requests')) {
-      console.error("❌ Yahoo Finance Chart Rate Limit (429): Using fallback data.");
+      console.error(`❌ Yahoo Finance Chart Rate Limit (429) for ${symbol}: Using fallback data.`);
+      console.error('💡 Tip: Chart data is cached for 1 hour. Wait before refreshing.');
     } else {
-      console.error("❌ Failed to fetch chart data:", error);
+      console.error(`❌ Failed to fetch chart data for ${symbol}:`, error?.message || error);
     }
+    
+    console.warn(`⚠️ Using generated fallback data for ${symbol} (current price: $${currentPrice})`);
     return generateFallbackData(range, symbol, currentPrice);
   }
 }
@@ -240,11 +271,7 @@ function generateFallbackData(range: string, symbol: string, currentPrice: numbe
   const points = range === '1d' ? 24 : range === '1wk' ? 7 : range === '3mo' ? 90 : range === '1y' ? 365 : 30;
   const msPerPoint = range === '1d' ? 3600000 : 86400000;
   
-  // Start from current price instead of hardcoded 42000
-  let price = currentPrice;
-  
   // Calculate variance based on asset type and price range
-  // Higher variance for better visibility
   let variancePercent = 0.04; // Default 4%
   if (symbol.endsWith('.IS')) {
     variancePercent = 0.035; // BIST: 3.5%
@@ -254,20 +281,31 @@ function generateFallbackData(range: string, symbol: string, currentPrice: numbe
   
   const variance = currentPrice * variancePercent;
   
-  return Array.from({ length: points }, (_, i) => {
-    // Random walk with trend
-    const randomChange = (Math.random() - 0.5) * variance;
-    price += randomChange;
+  // Generate data working BACKWARDS from current price to ensure final value is exact
+  const data: ChartDataPoint[] = [];
+  let price = currentPrice;
+  
+  // Start from the end (current time) and work backwards
+  for (let i = points - 1; i >= 0; i--) {
+    const timestamp = now - i * msPerPoint;
     
-    // Keep price within reasonable bounds (±7% from current for better visibility)
-    price = Math.max(currentPrice * 0.93, Math.min(currentPrice * 1.07, price));
-    
-    return {
-      date: new Date(now - (points - i) * msPerPoint).toISOString(),
+    data.push({
+      date: new Date(timestamp).toISOString(),
       price: price,
-      timestamp: now - (points - i) * msPerPoint,
-    };
-  });
+      timestamp: timestamp,
+    });
+    
+    // Only apply random walk if not the last point (which is currentPrice)
+    if (i > 0) {
+      const randomChange = (Math.random() - 0.5) * variance;
+      price -= randomChange; // Subtract because we're going backwards
+      
+      // Keep price within reasonable bounds (±7% from current)
+      price = Math.max(currentPrice * 0.93, Math.min(currentPrice * 1.07, price));
+    }
+  }
+  
+  return data;
 }
 
 // ============================================

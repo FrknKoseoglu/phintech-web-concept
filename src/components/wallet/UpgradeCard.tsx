@@ -1,4 +1,5 @@
 import { Sparkles } from "lucide-react";
+import { BRAND_PLUS_NAME } from "@/lib/brand-config";
 
 export default function UpgradeCard() {
   return (
@@ -7,7 +8,7 @@ export default function UpgradeCard() {
       
       <h3 className="text-lg font-bold mb-2 relative z-10 flex items-center gap-2">
         <Sparkles className="w-5 h-5" />
-        Midas Plus&apos;a Geç
+        {BRAND_PLUS_NAME}&apos;a Geç
       </h3>
       <p className="text-white/80 text-sm mb-4 relative z-10">
         Daha düşük komisyonlar ve canlı veri akışı ile yatırımlarını güçlendir.
