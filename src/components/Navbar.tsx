@@ -38,6 +38,7 @@ export default function Navbar() {
   const { data: session, status } = useSession();
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isLoading = status === "loading";
   const isAuthenticated = !!session?.user;
@@ -49,7 +50,8 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 h-16">
+    <>
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 h-16">
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
         {/* Left: Logo & Navigation */}
         <div className="flex items-center space-x-8">
@@ -214,11 +216,97 @@ export default function Navbar() {
           )}
 
           {/* Mobile Menu Button */}
-          <button className="lg:hidden p-2 rounded-full hover:bg-[#1C1C1E] text-text-muted">
+          <button 
+            onClick={() => setMobileMenuOpen(true)}
+            className="lg:hidden p-2 rounded-full hover:bg-[#1C1C1E] text-text-muted"
+          >
             <Menu className="w-5 h-5" />
           </button>
         </div>
       </div>
     </nav>
+
+    {/* Mobile Menu - Outside nav for full backdrop coverage */}
+    {mobileMenuOpen && (
+      <>
+        {/* Backdrop - Full screen coverage */}
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998] lg:hidden animate-fade-in"
+          onClick={() => setMobileMenuOpen(false)}
+          aria-label="Close menu"
+        />
+        
+        {/* Mobile Menu Panel - Above backdrop */}
+        <div className="fixed left-4 right-4 top-20 bg-white dark:bg-[#1C1C1E] backdrop-blur-xl z-[9999] lg:hidden shadow-2xl rounded-2xl border border-gray-200 dark:border-gray-700 animate-slide-down overflow-hidden">
+          {/* Navigation Links */}
+          <div className="p-3">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={cn(
+                    "flex items-center px-4 py-3.5 text-sm font-medium rounded-xl mb-1.5 transition-all duration-200",
+                    isActive
+                      ? "text-white bg-primary shadow-lg"
+                      : "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#2C2C2E]"
+                  )}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Divider */}
+          <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-600 to-transparent mx-3" />
+
+          {/* User Section */}
+          {isAuthenticated && (
+            <div className="p-3">
+              <div className="flex items-center space-x-3 p-3 rounded-xl bg-gray-100 dark:bg-[#2C2C2E] mb-2">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white font-semibold shadow-md">
+                  {session.user?.name?.charAt(0).toUpperCase() || "U"}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                    {session.user?.name || "Hesabım"}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                    {session.user?.email}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  handleSignOut();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-all font-medium text-sm"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Çıkış Yap</span>
+              </button>
+            </div>
+          )}
+
+          {!isAuthenticated && (
+            <div className="p-3">
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold transition-all text-sm shadow-lg"
+              >
+                <User className="w-4 h-4" />
+                <span>Giriş Yap</span>
+              </Link>
+            </div>
+          )}
+        </div>
+      </>
+    )}
+    </>
   );
 }
