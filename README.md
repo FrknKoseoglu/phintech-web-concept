@@ -1,6 +1,6 @@
-# 🦁 Midas Web Concept
+# 🦁 PhinTech Finance Platform
 
-A modern, high-performance web interface concept for the Midas investment platform. Built with Next.js 14+, Tailwind CSS, and a robust data integration layer.
+A modern, high-performance web interface concept for the PhinTech investment ecosystem. Built with Next.js 14+, Tailwind CSS, and a robust data integration layer.
 
 ## 🚀 Features
 
@@ -33,7 +33,7 @@ A modern, high-performance web interface concept for the Midas investment platfo
 
 ```bash
 git clone <repository-url>
-cd midas-web-concept
+cd phintech-web-concept
 npm install
 ```
 
