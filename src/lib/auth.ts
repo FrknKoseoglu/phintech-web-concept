@@ -4,7 +4,25 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 
+const isProduction = process.env.NODE_ENV === "production";
+const cookieDomain = isProduction ? ".furkankoseoglu.com" : undefined;
+
 export const authOptions: NextAuthOptions = {
+  cookies: isProduction
+    ? {
+        sessionToken: {
+          name: `__Secure-next-auth.session-token`,
+          options: {
+            httpOnly: true,
+            sameSite: "lax",
+            path: "/",
+            secure: true,
+            domain: cookieDomain,
+          },
+        },
+      }
+    : undefined,
+
   // @ts-ignore - Prisma adapter types are compatible
   adapter: PrismaAdapter(prisma),
   
