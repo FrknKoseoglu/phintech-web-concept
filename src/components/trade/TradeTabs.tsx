@@ -13,13 +13,13 @@ interface TradeTabsProps {
 }
 
 const tabs = [
-  { id: "orders", label: "Açık Emirler" },
+  // { id: "orders", label: "Açık Emirler" },
   { id: "history", label: "Alım-Satım Geçmişi" },
   { id: "assets", label: "Varlıklar" },
 ];
 
 export default function TradeTabs({ symbol, transactions, portfolioItem, currentPrice }: TradeTabsProps) {
-  const [activeTab, setActiveTab] = useState("orders");
+  const [activeTab, setActiveTab] = useState("history");
 
   // Filter transactions for current symbol
   const symbolTransactions = transactions.filter((t) => t.symbol === symbol);

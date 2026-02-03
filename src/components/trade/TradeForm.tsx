@@ -177,8 +177,8 @@ export default function TradeForm({
         </button>
       </div>
 
-      {/* Order Type Toggle - Market/Limit */}
-      <div className="flex gap-1 mb-4 bg-gray-100 dark:bg-[#1C1C1E] p-1 rounded-xl">
+      {/* Order Type Toggle - Market/Limit - HIDDEN FOR NOW */}
+      {/* <div className="flex gap-1 mb-4 bg-gray-100 dark:bg-[#1C1C1E] p-1 rounded-xl">
         <button
           onClick={() => { setOrderType('MARKET'); setLimitPrice(""); }}
           disabled={isPending}
@@ -203,7 +203,7 @@ export default function TradeForm({
         >
           Limit Emir
         </button>
-      </div>
+      </div> */}
 
       {/* Current Market Price (Read-Only) */}
       <div className="mb-4 p-3 bg-gray-100 dark:bg-[#1C1C1E] rounded-2xl">
