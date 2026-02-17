@@ -71,7 +71,7 @@ export const fetchCoinGeckoData = unstable_cache(
       
       const response = await fetch(url, {
         headers: getCoinGeckoHeaders(),
-        next: { revalidate: 86400 }, // 24 hours cache
+        next: { revalidate: 300 }, // 5 minutes cache
       });
 
       if (!response.ok) {
@@ -86,9 +86,9 @@ export const fetchCoinGeckoData = unstable_cache(
       return {};
     }
   },
-  ['coingecko-prices-v2'],
+  ['coingecko-prices-v3'], // Bumped to invalidate stale production cache
   { 
-    revalidate: 86400, // Cache for 24 hours
+    revalidate: 300, // Cache for 5 minutes
     tags: ['crypto-prices'] 
   }
 );
@@ -183,7 +183,7 @@ export const getCryptoHistory = unstable_cache(
       
       const response = await fetch(url, {
         headers: getCoinGeckoHeaders(),
-        next: { revalidate: 86400 }, // Cache for 24 hours
+        next: { revalidate: 3600 }, // Cache for 1 hour
       });
 
       if (!response.ok) {
@@ -213,9 +213,9 @@ export const getCryptoHistory = unstable_cache(
       return [];
     }
   },
-  ['coingecko-history-v2'],
+  ['coingecko-history-v3'], // Bumped to invalidate stale production cache
   {
-    revalidate: 86400, // Cache for 24 hours
+    revalidate: 3600, // Cache for 1 hour
     tags: ['crypto-history'],
   }
 );

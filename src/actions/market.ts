@@ -156,9 +156,9 @@ const fetchYahooChart = unstable_cache(
     console.log(`✅ Yahoo chart data received: ${result.quotes?.length || 0} data points`);
     return result;
   },
-  ['yahoo-chart-v4'], // Bumped for 24h cache
+  ['yahoo-chart-v5'], // Bumped to invalidate stale production cache
   { 
-    revalidate: 86400, // Cache for 24 hours (development stability)
+    revalidate: 3600, // Cache for 1 hour
     tags: ['chart-data'] 
   }
 );
